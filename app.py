@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-发票COR专用识别系统
+发票OCR专用识别系统
 基于RapidOCR的智能发票识别与字段提取平台
 """
 
@@ -262,7 +262,7 @@ custom_css = load_custom_css()
 
 # 创建Gradio界面
 with gr.Blocks(
-    title="🧾 发票COR专用识别系统", 
+    title="🧾 发票OCR专用识别系统", 
     css=custom_css, 
     theme=gr.themes.Soft()
 ) as demo:
@@ -272,7 +272,7 @@ with gr.Blocks(
         gr.HTML(
             """
             <div class="header-section fade-in-up">
-                <h1 class="header-title">🧾 发票COR专用识别系统</h1>
+                <h1 class="header-title">🧾 发票OCR专用识别系统</h1>
                 <p class="header-subtitle">基于AI的智能发票识别与字段提取平台</p>
                 <div class="header-features">
                     <span class="feature-tag">🚀 高性能OCR</span>

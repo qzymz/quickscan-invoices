@@ -139,9 +139,9 @@ body {
     padding: 15px !important;
     font-size: 1rem !important;
     transition: all 0.3s ease !important;
-    height: 300px !important;
-    min-height: 300px !important;
-    max-height: 300px !important;
+    height: 400px !important;
+    min-height: 400px !important;
+    max-height: 400px !important;
     overflow-y: auto !important;
 }
 
@@ -203,8 +203,8 @@ body {
     border-radius: 12px !important;
     overflow: hidden !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-    height: 350px !important;
-    min-height: 350px !important;
+    height: 400px !important;
+    min-height: 400px !important;
     background: white !important;
     border: 1px solid #212529 !important;
     width: 100% !important;
@@ -338,9 +338,9 @@ body {
     text-align: center !important;
     background: rgba(102, 126, 234, 0.05) !important;
     transition: all 0.3s ease !important;
-    height: 300px !important;
-    min-height: 300px !important;
-    max-height: 300px !important;
+    height: 400px !important;
+    min-height: 400px !important;
+    max-height: 400px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -382,24 +382,24 @@ body {
 
 /* 确保图片容器不会超出边界 */
 .image-upload-container {
-    height: 300px !important;
-    min-height: 300px !important;
-    max-height: 300px !important;
+    height: 400px !important;
+    min-height: 400px !important;
+    max-height: 400px !important;
     overflow: hidden !important;
 }
 
 /* 强制图片上传组件保持固定高度 */
 .gr-image {
-    height: 300px !important;
-    min-height: 300px !important;
-    max-height: 300px !important;
+    height: 400px !important;
+    min-height: 400px !important;
+    max-height: 400px !important;
     overflow: hidden !important;
 }
 
 .gr-image .image-container {
-    height: 300px !important;
-    min-height: 300px !important;
-    max-height: 300px !important;
+    height: 400px !important;
+    min-height: 400px !important;
+    max-height: 400px !important;
     overflow: hidden !important;
 }
 

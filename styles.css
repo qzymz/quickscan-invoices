@@ -1,0 +1,546 @@
+/* 
+ * 发票COR专用识别系统样式文件
+ * 现代化设计风格，包含渐变背景、毛玻璃效果、动画等
+ */
+
+/* 全局样式 */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+/* 主容器样式 */
+.main-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 标题区域 */
+.header-section {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.header-title {
+    font-size: 3rem;
+    font-weight: 700;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-subtitle {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.header-features {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.feature-tag {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transition: transform 0.3s ease;
+}
+
+.feature-tag:hover {
+    transform: translateY(-2px);
+}
+
+/* 主要内容区域 */
+.content-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+/* 左侧输入区域 */
+.input-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.input-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 右侧输出区域 */
+.output-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* 按钮样式 */
+.gr-button {
+    background: linear-gradient(45deg, #667eea, #764ba2) !important;
+    color: white !important;
+    border: none !important;
+    padding: 12px 24px !important;
+    border-radius: 25px !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+    transition: all 0.3s ease !important;
+    margin: 5px !important;
+}
+
+.gr-button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6) !important;
+}
+
+.gr-button:active {
+    transform: translateY(0) !important;
+}
+
+/* 输入框样式 */
+.gr-textbox {
+    border-radius: 15px !important;
+    border: 2px solid #e1e5e9 !important;
+    padding: 15px !important;
+    font-size: 1rem !important;
+    transition: all 0.3s ease !important;
+    height: 300px !important;
+    min-height: 300px !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+}
+
+.gr-textbox:focus {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+}
+
+/* 滑块样式 */
+.gr-slider {
+    border-radius: 10px !important;
+}
+
+.gr-slider .thumb {
+    background: linear-gradient(45deg, #667eea, #764ba2) !important;
+    border-radius: 50% !important;
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4) !important;
+}
+
+/* 标签页样式 - 与上传区域高度一致 */
+.tabs {
+    border-radius: 15px !important;
+    overflow: hidden !important;
+    height: 400px !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.tab-nav {
+    background: linear-gradient(45deg, #667eea, #764ba2) !important;
+    border-radius: 15px 15px 0 0 !important;
+    flex-shrink: 0 !important;
+}
+
+.tab-nav button {
+    color: white !important;
+    font-weight: 600 !important;
+    padding: 15px 20px !important;
+    transition: all 0.3s ease !important;
+}
+
+.tab-nav button:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.tab-nav button.selected {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* 标签页内容区域 */
+.tab-content {
+    flex: 1 !important;
+    height: calc(100% - 60px) !important;
+    overflow: hidden !important;
+}
+
+/* 数据表格统一高度 - 与上传区域匹配 */
+.gr-dataframe {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    height: 350px !important;
+    min-height: 350px !important;
+    background: white !important;
+    border: 1px solid #212529 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* 确保Dataframe复制按钮可见 */
+.gr-dataframe .copy-button,
+.gr-dataframe button[title*="copy"],
+.gr-dataframe button[title*="复制"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 100 !important;
+    background: #28a745 !important;
+    color: rgb(119, 111, 111) !important;
+    border: none !important;
+    border-radius: 6px !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2) !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    min-width: 60px !important;
+    height: 28px !important;
+    margin: 4px !important;
+}
+
+.gr-dataframe .copy-button:hover,
+.gr-dataframe button[title*="copy"]:hover,
+.gr-dataframe button[title*="复制"]:hover {
+    background: #20c997 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 3px 6px rgba(40, 167, 69, 0.3) !important;
+}
+
+/* 简单明了的表格样式 */
+.gr-dataframe table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    background: white !important;
+    font-size: 13px !important;
+}
+
+.gr-dataframe thead {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    background: #f8f9fa !important;
+}
+
+.gr-dataframe th,
+.gr-dataframe td {
+    padding: 8px 12px !important;
+    text-align: left !important;
+    border-bottom: 1px solid #e9ecef !important;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+}
+
+.gr-dataframe th {
+    background: #f8f9fa !important;
+    color: #495057 !important;
+    font-weight: 600 !important;
+    border-bottom: 2px solid #dee2e6 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+}
+
+.gr-dataframe td {
+    color: #212529 !important;
+    background: white !important;
+}
+
+.gr-dataframe tr:nth-child(even) {
+    background: #f8f9fa !important;
+}
+
+.gr-dataframe tr:hover {
+    background: #e9ecef !important;
+    transition: background-color 0.15s ease !important;
+}
+
+/* 确保表格内容区域有足够空间 */
+.gr-dataframe .table-container {
+    height: calc(100% - 40px) !important;
+    overflow-y: auto !important;
+}
+
+/* 表格滚动区域 */
+.gr-dataframe tbody {
+    max-height: 100px !important;
+    overflow-y: auto !important;
+}
+
+/* 自定义滚动条 */
+.gr-dataframe tbody::-webkit-scrollbar {
+    width: 6px !important;
+}
+
+.gr-dataframe tbody::-webkit-scrollbar-track {
+    background: #f1f3f4 !important;
+    border-radius: 3px !important;
+}
+
+.gr-dataframe tbody::-webkit-scrollbar-thumb {
+    background: #c1c1c1 !important;
+    border-radius: 3px !important;
+}
+
+.gr-dataframe tbody::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8 !important;
+}
+
+/* 确保表格头部始终可见 */
+.gr-dataframe thead th {
+    position: sticky !important;
+    top: 0 !important;
+    background: #6c7c8b !important;
+    z-index: 10 !important;
+}
+
+/* 图片上传区域 - 固定尺寸，上传后不变大 */
+.image-upload {
+    border: 2px dashed #667eea !important;
+    border-radius: 20px !important;
+    padding: 40px !important;
+    text-align: center !important;
+    background: rgba(102, 126, 234, 0.05) !important;
+    transition: all 0.3s ease !important;
+    height: 300px !important;
+    min-height: 300px !important;
+    max-height: 300px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+}
+
+.image-upload:hover {
+    border-color: #764ba2 !important;
+    background: rgba(102, 126, 234, 0.1) !important;
+}
+
+/* 图片预览区域 - 固定尺寸 */
+.image-upload img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    border-radius: 10px !important;
+    width: auto !important;
+    height: auto !important;
+    display: block !important;
+}
+
+/* 隐藏全屏按钮 */
+.full-screen-button,
+.fullscreen-button,
+.expand-button {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* 隐藏图片组件的全屏功能 */
+.gr-image .fullscreen,
+.gr-image .expand {
+    display: none !important;
+}
+
+/* 确保图片容器不会超出边界 */
+.image-upload-container {
+    height: 300px !important;
+    min-height: 300px !important;
+    max-height: 300px !important;
+    overflow: hidden !important;
+}
+
+/* 强制图片上传组件保持固定高度 */
+.gr-image {
+    height: 300px !important;
+    min-height: 300px !important;
+    max-height: 300px !important;
+    overflow: hidden !important;
+}
+
+.gr-image .image-container {
+    height: 300px !important;
+    min-height: 300px !important;
+    max-height: 300px !important;
+    overflow: hidden !important;
+}
+
+/* 参数设置区域 */
+.accordion {
+    border-radius: 15px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.accordion-header {
+    background: linear-gradient(45deg, #667eea, #764ba2) !important;
+    color: white !important;
+    padding: 15px 20px !important;
+    font-weight: 600 !important;
+}
+
+/* 示例区域 */
+.examples {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-radius: 20px !important;
+    padding: 20px !important;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .content-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .header-title {
+        font-size: 2rem;
+    }
+    
+    .header-features {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+/* 动画效果 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* 状态指示器 */
+.status-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.status-valid {
+    background: #28a745;
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+}
+
+.status-invalid {
+    background: #dc3545;
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+}
+
+/* 加载动画 */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 特殊效果 */
+.glow-effect {
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+}
+
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* 进度条样式 */
+.progress-bar {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 10px;
+    height: 8px;
+    transition: width 0.3s ease;
+}
+
+/* 通知样式 */
+.notification {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    padding: 15px;
+    margin: 10px 0;
+    border-left: 4px solid #667eea;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.notification.success {
+    border-left-color: #28a745;
+}
+
+.notification.warning {
+    border-left-color: #ffc107;
+}
+
+.notification.error {
+    border-left-color: #dc3545;
+}
+
+/* 确保标签页内容区域占满剩余空间 */
+.tabs > div:last-child {
+    flex: 1 !important;
+    height: calc(100% - 60px) !important;
+    overflow: hidden !important;
+}

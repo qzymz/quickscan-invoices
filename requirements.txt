@@ -7,3 +7,4 @@ gradio>=4.0.0
 numpy>=1.21.0
 omegaconf>=2.3.0
 Pillow>=8.0.0
+gradio[mcp]

@@ -27,6 +27,7 @@ license: Apache License 2.0
 
 - **多类型发票识别** - 支持增值税专用发票、普通发票、电子发票等
 - **智能字段提取** - 自动提取发票号码、开票日期、金额、税额等关键信息
+- **多格式文件支持** - 支持图像文件(JPG、PNG、BMP等)和PDF文件
 - **Web界面** - 基于Gradio的现代化用户界面
 - **多格式输出** - 支持JSON和结构化文本输出
 
@@ -35,6 +36,7 @@ license: Apache License 2.0
 ### 环境要求
 - Python 3.7+
 - Windows/Linux/MacOS
+- 对于PDF支持，需要安装poppler-utils (Linux/Mac) 或 poppler-windows (Windows)
 
 ### 安装依赖
 ```bash
@@ -43,14 +45,21 @@ pip install -r requirements.txt
 
 ### 启动系统
 ```bash
+# 普通模式
 python app.py
+
+# MCP服务器模式
+python app.py --mcp-server
+
+# 指定端口和主机
+python app.py --host 0.0.0.0 --port 8080
 ```
 
 启动后访问 `http://localhost:7860` 即可使用系统。
 
 ## 📋 使用方法
 
-1. **上传发票图片** - 点击上传区域选择发票图片
+1. **上传发票文件** - 点击上传区域选择发票图片或PDF文件
 2. **调整参数** - 设置置信度阈值（可选）
 3. **开始识别** - 点击"开始识别"按钮
 4. **查看结果** - 在结果区域查看识别结果
@@ -65,18 +74,22 @@ invoice_ocr/
 ├── requirements.txt       # 依赖文件
 ├── styles.css            # 样式文件
 ├── README.md             # 项目说明
-└── images/               # 示例图片
-    ├── fp1.jpg
-    ├── fp2.jpg
-    ├── fp3.jpg
-    ├── fp4.jpg
-    └── fp5.jpg
+├── images/               # 示例图片
+│   ├── fp1.jpg
+│   ├── fp2.jpg
+│   ├── fp3.jpg
+│   ├── fp4.jpg
+│   └── fp5.jpg
+└── examples/             # 示例文件
+    ├── invoice1.pdf
+    └── invoice2.pdf
 ```
 
 ## 🔧 技术栈
 
 - **RapidOCR** - 高性能OCR引擎
 - **Gradio** - 现代化Web界面
+- **PyMuPDF/pdf2image** - PDF文件处理
 - **正则表达式** - 智能字段提取
 - **Python** - 后端处理逻辑
 
@@ -87,6 +100,18 @@ invoice_ocr/
 - 电子发票
 - 通用机打发票
 - 手写发票
+
+## 📄 支持的文件格式
+
+### 图像文件
+- JPG/JPEG
+- PNG
+- BMP
+- TIFF/TIF
+
+### PDF文件
+- 单页PDF发票
+- 多页PDF文档（自动处理第一页）
 
 ## 🔍 识别字段
 

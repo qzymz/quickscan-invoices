@@ -7,9 +7,15 @@
 import gradio as gr
 import json
 import numpy as np
+import argparse
+import sys
+import os
 from datetime import datetime
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Union
 from rapidocr import RapidOCR
+from PIL import Image
+import fitz  # PyMuPDF
+
 from invoice_config import (
     INVOICE_TYPES, 
     COMMON_FIELD_PATTERNS, 
@@ -37,6 +43,58 @@ def load_custom_css():
     except Exception as e:
         print(f"加载样式文件时出错: {e}")
         return ""
+
+# PDF处理函数（PyMuPDF方式，无需poppler）
+def pdf_first_page_to_image(pdf_file) -> Image.Image:
+    """将PDF第一页渲染为PIL.Image对象，兼容gradio NamedString/BytesIO/真实文件"""
+    try:
+        if hasattr(pdf_file, "seek") and hasattr(pdf_file, "read"):
+            pdf_file.seek(0)
+            pdf_bytes = pdf_file.read()
+        else:
+            with open(pdf_file.name, "rb") as f:
+                pdf_bytes = f.read()
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        page = doc.load_page(0)
+        pix = page.get_pixmap(dpi=300)
+        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+        return img
+    except Exception as e:
+        raise Exception(f"PDF转图片失败: {e}")
+
+def process_pdf_invoice(pdf_file, confidence_threshold: float = 0.5):
+    try:
+        img = pdf_first_page_to_image(pdf_file)
+        result_data, vis_text, table_data = invoice_processor.process_invoice(img, confidence_threshold)
+        result_data["source_type"] = "PDF"
+        result_data["processed_page"] = 1
+        return json.dumps(result_data, ensure_ascii=False, indent=2), vis_text, table_data
+    except Exception as e:
+        error_msg = f"PDF处理失败: {str(e)}"
+        return {"error": error_msg}, error_msg, [[0, "PDF处理失败", "0.000"]]
+
+def detect_file_type(file_path: str) -> str:
+    if not file_path:
+        return "unknown"
+    file_extension = os.path.splitext(file_path)[1].lower()
+    if file_extension in ['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif']:
+        return "image"
+    elif file_extension == '.pdf':
+        return "pdf"
+    else:
+        return "unknown"
+
+def process_mixed_input(file_input, confidence_threshold: float = 0.5):
+    if file_input is None:
+        return {"error": "请先上传文件"}, "请先上传文件", []
+    file_type = detect_file_type(file_input.name)
+    if file_type == "image":
+        return get_invoice_result(file_input, confidence_threshold)
+    elif file_type == "pdf":
+        return process_pdf_invoice(file_input, confidence_threshold)
+    else:
+        error_msg = "不支持的文件格式，请上传图像或PDF文件"
+        return {"error": error_msg}, error_msg, [[0, "不支持的文件格式", "0.000"]]
 
 # 发票COR处理器类
 class InvoiceCORProcessor:
@@ -218,31 +276,29 @@ class InvoiceCORProcessor:
 # 全局处理器实例
 invoice_processor = InvoiceCORProcessor()
 
-def get_invoice_result(img_input, confidence_threshold):
-    """获取发票识别结果"""
-    if img_input is None:
-        return "请先上传发票图片", "", []
-    
+def process_with_fields_image(img_path, confidence_threshold: float = 0.5):
+    """处理图像发票，返回结构化数据、可视化文本和表格数据"""
+    if img_path is None:
+        return {"error": "请先上传图片"}, "请先上传图片", []
     try:
-        result_data, vis_text, table_data = invoice_processor.process_invoice(
-            img_input, confidence_threshold
-        )
-        
-        # 默认返回JSON格式
+        img_input = Image.open(img_path)
+        result_data, vis_text, table_data = invoice_processor.process_invoice(img_input, confidence_threshold)
+        result_data["source_type"] = "Image"
         return json.dumps(result_data, ensure_ascii=False, indent=2), vis_text, table_data
     except Exception as e:
-        error_msg = f"处理失败: {str(e)}"
-        return error_msg, error_msg, [[0, "处理失败", "0.000"]]
+        error_msg = f"图片处理失败: {str(e)}"
+        return {"error": error_msg}, error_msg, [[0, "图片处理失败", "0.000"]]
 
 def create_invoice_examples():
-    """创建发票示例"""
-    return [
+    # 只返回图片样例
+    examples = [
         ["images/fp1.jpg", 0.5],
         ["images/fp2.jpg", 0.5],
         ["images/fp3.jpg", 0.5],
         ["images/fp4.jpg", 0.5],
         ["images/fp5.jpg", 0.5]
     ]
+    return examples
 
 def export_invoice_config(confidence_threshold):
     """导出发票配置"""
@@ -285,153 +341,55 @@ with gr.Blocks(
             """
         )
     
-    # 主要内容区域
     with gr.Row():
-        # 左侧输入区域
         with gr.Column(scale=1):
             with gr.Group(elem_classes="input-section fade-in-up"):
-                gr.HTML('<div class="input-title">📄 上传发票图片</div>')
-                img_input = gr.Image(
-                    label="",
-                    sources="upload",
-                    type="pil",
-                    elem_classes="image-upload",
-                    height=300,
-                    width=None,
-                    show_download_button=False
-                )
-                
-                with gr.Accordion("⚙️ 参数设置", open=False, elem_classes="accordion"):
-                    confidence_threshold = gr.Slider(
-                        label="🎯 置信度阈值",
-                        minimum=0.1,
-                        maximum=1.0,
-                        value=0.5,
-                        step=0.1,
-                        info="文本识别置信度阈值，值越大识别越严格"
-                    )
-                
-                with gr.Row():
-                    run_btn = gr.Button("🚀 开始识别", variant="primary", size="lg")
-                    export_btn = gr.Button("📋 导出配置", size="lg")
-                    download_btn_hidden = gr.DownloadButton(
-                        visible=False, 
-                        elem_id="download_btn_hidden"
-                    )
-        
-        # 右侧输出区域
+                gr.HTML('<div class="input-title">📄 上传发票文件</div>')
+                with gr.Tabs():
+                    with gr.Tab("图片发票"):
+                        img_input = gr.Image(label="上传发票图片", type="filepath", elem_classes="image-upload")
+                        confidence_img = gr.Slider(label="🎯 置信度阈值", minimum=0.1, maximum=1.0, value=0.5, step=0.1)
+                        with gr.Row():
+                            run_btn_img = gr.Button("🚀 开始识别", variant="primary", size="lg", elem_classes="gr-button")
+                    with gr.Tab("PDF发票"):
+                        pdf_input = gr.File(label="上传PDF发票", file_types=[".pdf"], file_count="single", elem_classes="image-upload")
+                        confidence_pdf = gr.Slider(label="🎯 置信度阈值", minimum=0.1, maximum=1.0, value=0.5, step=0.1)
+                        with gr.Row():
+                            run_btn_pdf = gr.Button("🚀 开始识别", variant="primary", size="lg", elem_classes="gr-button")
+
         with gr.Column(scale=1):
             with gr.Group(elem_classes="output-section fade-in-up"):
                 gr.HTML('<div class="input-title">📊 识别结果</div>')
-                
-                with gr.Tabs(elem_classes="tabs"):
-                    with gr.TabItem("🎯 JSON格式", elem_classes="tab-nav"):
-                        result_output = gr.Textbox(
-                            label="",
-                            lines=12,
-                            max_lines=15,
-                            show_copy_button=True,
-                            elem_classes="gr-textbox"
-                        )
-                    
-                    with gr.TabItem("📋 字段详情", elem_classes="tab-nav"):
-                        field_output = gr.Textbox(
-                            label="",
-                            lines=12,
-                            max_lines=15,
-                            show_copy_button=True,
-                            elem_classes="gr-textbox"
-                        )
-                    
-                    with gr.TabItem("📝 原始文本", elem_classes="tab-nav"):
-                        table_output = gr.Dataframe(
-                            label="",
-                            headers=["序号", "文本内容", "置信度"],
-                            datatype=["number", "str", "number"],
-                            show_copy_button=True,
-                            elem_classes="gr-dataframe"
-                        )
-    
-    # 示例区域
-    with gr.Row():
-        gr.HTML(
-            """
-            <div class="examples fade-in-up">
-                <h3 style="text-align: center; margin-bottom: 20px; color: #333;">
-                    💡 快速示例 - 点击下方示例图片开始体验
-                </h3>
-            </div>
-            """
-        )
-    
-    # 处理函数绑定
-    def process_with_fields(img_input, confidence_threshold):
-        """处理发票并返回多个输出"""
-        result_data, vis_text, table_data = get_invoice_result(
-            img_input, confidence_threshold
-        )
-        
-        # 添加调试信息
-        print(f"Debug - table_data: {table_data}")
-        print(f"Debug - table_data length: {len(table_data)}")
-        if table_data:
-            print(f"Debug - first row: {table_data[0]}")
-        
-        # 提取字段信息用于显示
-        if not result_data.startswith("处理失败"):
-            try:
-                data = json.loads(result_data)
-                field_text = "📋 提取的字段信息:\n"
-                if "extracted_fields" in data:
-                    for field, value in data["extracted_fields"].items():
-                        field_text += f"• {field}: {value}\n"
-                    
-                    # 添加验证信息
-                    if "validation" in data:
-                        validation = data["validation"]
-                        field_text += f"\n🔍 数据验证:\n"
-                        status_icon = "✅" if validation['is_valid'] else "❌"
-                        field_text += f"{status_icon} 有效性: {'有效' if validation['is_valid'] else '无效'}\n"
-                        if validation['missing_fields']:
-                            field_text += f"⚠️ 缺失字段: {', '.join(validation['missing_fields'])}\n"
-                        if validation['warnings']:
-                            field_text += f"⚠️ 警告: {', '.join(validation['warnings'])}\n"
-                else:
-                    field_text = "❌ 未提取到字段信息"
-            except Exception as e:
-                print(f"Debug - JSON解析错误: {e}")
-                field_text = vis_text
-        else:
-            field_text = vis_text
-        
-        return result_data, field_text, table_data
-    
-    run_btn.click(
-        process_with_fields,
-        inputs=[img_input, confidence_threshold],
-        outputs=[result_output, field_output, table_output]
-    )
-    
-    # 导出配置
-    export_btn.click(
-        fn=export_invoice_config,
-        inputs=[confidence_threshold],
-        outputs=[download_btn_hidden]
-    ).then(
-        fn=None,
-        inputs=None,
-        outputs=None,
-        js="() => document.querySelector('#download_btn_hidden').click()",
-    )
-    
-    # 示例
-    examples = gr.Examples(
+                with gr.Tabs():
+                    with gr.TabItem("🎯 JSON格式"):
+                        result_output = gr.Textbox(label="", lines=12, max_lines=15, show_copy_button=True, elem_classes="gr-textbox")
+                    with gr.TabItem("📋 字段详情"):
+                        field_output = gr.Textbox(label="", lines=12, max_lines=15, show_copy_button=True, elem_classes="gr-textbox")
+                    with gr.TabItem("📝 原始文本"):
+                        table_output = gr.Dataframe(label="", headers=["序号", "文本内容", "置信度"], datatype=["number", "str", "number"], show_copy_button=True, elem_classes="gr-databox")
+
+    # Examples 只绑定图片上传组件
+    gr.Examples(
         examples=create_invoice_examples(),
         examples_per_page=5,
-        inputs=[img_input, confidence_threshold],
-        fn=process_with_fields,
+        inputs=[img_input, confidence_img],
+        fn=lambda img_path, conf: process_with_fields_image(img_path, conf),
         outputs=[result_output, field_output, table_output],
         cache_examples=False
+    )
+
+    # 绑定图片发票按钮事件
+    run_btn_img.click(
+        fn=lambda img_path, conf: process_with_fields_image(img_path, conf),
+        inputs=[img_input, confidence_img],
+        outputs=[result_output, field_output, table_output]
+    )
+
+    # 绑定PDF发票按钮事件
+    run_btn_pdf.click(
+        fn=lambda pdf_file, conf: process_pdf_invoice(pdf_file, conf),
+        inputs=[pdf_input, confidence_pdf],
+        outputs=[result_output, field_output, table_output]
     )
 
 if __name__ == "__main__":

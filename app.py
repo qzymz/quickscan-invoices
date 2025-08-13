@@ -387,7 +387,7 @@ with gr.Blocks(
 
     # 绑定PDF发票按钮事件
     run_btn_pdf.click(
-        fn=lambda pdf_file, conf: process_pdf_invoice(pdf_file, conf),
+        fn=process_pdf_invoice,
         inputs=[pdf_input, confidence_pdf],
         outputs=[result_output, field_output, table_output]
     )

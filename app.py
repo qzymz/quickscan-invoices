@@ -373,7 +373,7 @@ with gr.Blocks(
         examples=create_invoice_examples(),
         examples_per_page=5,
         inputs=[img_input, confidence_img],
-        fn=lambda img_path, conf: process_with_fields_image(img_path, conf),
+        fn=process_with_fields_image,
         outputs=[result_output, field_output, table_output],
         cache_examples=False
     )

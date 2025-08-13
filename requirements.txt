@@ -11,4 +11,4 @@ pdf2image>=1.16.0
 PyPDF2>=3.0.0
 pymupdf>=1.23.0
 gradio[mcp]
-mcp==1.8.1
+mcp==1.9.0

@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import field_extractor; print\\('OK'\\)\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git commit *)",
+      "Bash(python -c \"import ocr_engine; print\\('OK'\\)\")",
+      "Bash(python *)",
+      "Bash(pip install *)",
+      "Bash(git rm *)",
+      "Bash(pip show *)",
+      "Bash(curl -s http://127.0.0.1:8000/)",
+      "Bash(curl -s http://127.0.0.1:8000/api/status/nonexistent)",
+      "Bash(kill %1)",
+      "Bash(wait)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8000/)",
+      "Bash(curl -s -o /dev/null -w \"CSS: %{http_code}\\\\n\" http://127.0.0.1:8000/static/css/style.css)",
+      "Bash(curl -s -o /dev/null -w \"JS: %{http_code}\\\\n\" http://127.0.0.1:8000/static/js/app.js)",
+      "Bash(taskkill /F /IM python.exe)",
+      "Bash(taskkill /F /IM pythonw.exe)",
+      "Bash(curl -s -o /dev/null -w \"Server: %{http_code}\" http://127.0.0.1:8000/)",
+      "Bash(taskkill /F /FI \"WINDOWTITLE eq uvicorn*\")",
+      "Bash(timeout 2)",
+      "Bash(timeout 1)",
+      "Bash(curl -s -o /dev/null -w \"Health: %{http_code}\\\\n\" http://127.0.0.1:8000/)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill *)",
+      "Bash(powershell -Command \"Stop-Process -Id 5324,7784,28620,27412 -Force\")",
+      "Bash(curl -s -o /dev/null -w \"Server on 8001: %{http_code}\\\\n\" http://127.0.0.1:8001/)",
+      "Bash(cmd *)",
+      "Bash(mkdir -p quickscan-invoices)",
+      "Bash(cp -r invoice_ocr/* quickscan-invoices/)",
+      "Bash(cp -r invoice_ocr/.claude quickscan-invoices/)"
+    ]
+  }
+}

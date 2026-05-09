@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Invoice OCR Recognition System (发票OCR识别系统) — a FastAPI web app with native HTML/CSS/JS frontend that uses RapidOCR to extract structured fields (date, total amount) from uploaded invoice images and PDFs. Supports 5 invoice types (VAT special, VAT ordinary, electronic, machine-printed, handwritten).
+QuickScan Invoices — a FastAPI web app with native HTML/CSS/JS frontend that uses RapidOCR to extract structured fields (date, total amount) from uploaded invoice images and PDFs. Supports 5 invoice types (VAT special, VAT ordinary, electronic, machine-printed, handwritten).
 
 ## Key Commands
 

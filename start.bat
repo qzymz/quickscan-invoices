@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo   Invoice OCR System
+echo   QuickScan Invoices
 echo ========================================
 echo.
 

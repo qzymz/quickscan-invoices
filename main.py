@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-"""发票OCR专用识别系统 - FastAPI 后端"""
+"""QuickScan Invoices - FastAPI 后端"""
 
 import json
 import os
 import uuid
 import io
 import asyncio
+import tempfile
+import traceback
 from pathlib import Path
 from typing import Dict, Any
 
@@ -14,12 +16,17 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import FileResponse, HTMLResponse
 from PIL import Image
+import fitz
 import numpy as np
 
 from ocr_engine import InvoiceImageProcessor, pdf_first_page_to_image
 from export import export_table_data
 
-app = FastAPI(title="发票OCR识别系统")
+import logging
+logger = logging.getLogger("quickscan")
+logger.setLevel(logging.DEBUG)
+
+app = FastAPI(title="QuickScan Invoices")
 
 # 静态文件和模板
 BASE_DIR = Path(__file__).parent
@@ -97,34 +104,76 @@ async def batch_recognize(
 
 
 def _process_file_bytes(content: bytes, file_ext: str, confidence: float) -> Dict[str, Any]:
-    """从文件字节数据中提取结构化信息，用 numpy array 避免 RapidOCR 关闭文件句柄"""
+    """从文件字节数据中提取结构化信息"""
+    import sys
+    print(f"  >>> _process_file_bytes called: ext={file_ext}, size={len(content)}, python={sys.executable}", flush=True)
     if file_ext == ".pdf":
-        img = pdf_first_page_to_image(io.BytesIO(content))
-        result_data, _, _ = invoice_processor.process_invoice(np.array(img), confidence)
-        result_data["source_type"] = "PDF"
-        result_data["processed_page"] = 1
+        tmp_path = os.path.join(tempfile.gettempdir(), f"invoice_{uuid.uuid4().hex}.pdf")
+        print(f"  >>> Writing temp PDF: {tmp_path}", flush=True)
+        with open(tmp_path, "wb") as f:
+            f.write(content)
+        print(f"  >>> Temp file written: {os.path.getsize(tmp_path)} bytes", flush=True)
+        try:
+            result_data, _, _ = _process_pdf_file(tmp_path, confidence)
+            result_data["source_type"] = "PDF"
+            result_data["processed_page"] = 1
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            print(f"  >>> Temp file cleaned", flush=True)
     elif file_ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"]:
-        img = Image.open(io.BytesIO(content))
-        result_data, _, _ = invoice_processor.process_invoice(np.array(img), confidence)
-        result_data["source_type"] = "Image"
+        ext_map = {".jpg": ".jpg", ".jpeg": ".jpg", ".png": ".png", ".bmp": ".bmp", ".tiff": ".tiff", ".tif": ".tif"}
+        suffix = ext_map.get(file_ext, ".jpg")
+        tmp_path = os.path.join(tempfile.gettempdir(), f"invoice_{uuid.uuid4().hex}{suffix}")
+        with open(tmp_path, "wb") as f:
+            f.write(content)
+        try:
+            result_data, _, _ = _process_image_file(tmp_path, confidence)
+            result_data["source_type"] = "Image"
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
     else:
         raise ValueError(f"不支持的格式: {file_ext}")
 
     return result_data
 
 
+def _process_pdf_file(pdf_path: str, confidence: float):
+    """处理 PDF 文件"""
+    doc = fitz.open(pdf_path)
+    page = doc.load_page(0)
+    pix = page.get_pixmap(dpi=300)
+    img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape((pix.height, pix.width, pix.n))
+    doc.close()
+    result_data, _, _ = invoice_processor.process_invoice(img_array, confidence)
+    return result_data, None, None
+
+
+def _process_image_file(img_path: str, confidence: float):
+    """处理图片文件"""
+    img_array = np.array(Image.open(img_path))
+    result_data, _, _ = invoice_processor.process_invoice(img_array, confidence)
+    return result_data, None, None
+
+
 async def _run_batch(task_id: str, file_data: list[dict], confidence: float):
     """后台执行批量识别"""
     tasks[task_id]["status"] = "processing"
+    print(f"\n>>> _run_batch started, task_id={task_id}, files={len(file_data)}", flush=True)
 
     for i, fd in enumerate(file_data):
-        try:
-            filename = fd["filename"]
-            content = fd["content"]
-            file_ext = os.path.splitext(filename)[1].lower()
+        filename = fd["filename"]
+        content = fd["content"]
+        file_ext = os.path.splitext(filename)[1].lower()
 
+        print(f"\n>>> Processing [{i+1}/{len(file_data)}]: {filename}", flush=True)
+        print(f">>> Content size: {len(content)} bytes, ext: {file_ext}", flush=True)
+
+        try:
             result_data = _process_file_bytes(content, file_ext, confidence)
             result_data["file_name"] = filename
+            print(f">>> SUCCESS: {result_data.get('extracted_fields')}", flush=True)
             tasks[task_id]["results"].append(result_data)
             tasks[task_id]["table_data"].append([
                 filename,
@@ -132,12 +181,21 @@ async def _run_batch(task_id: str, file_data: list[dict], confidence: float):
                 result_data.get("extracted_fields", {}).get("价税合计小写", "未识别"),
             ])
         except Exception as e:
-            tasks[task_id]["results"].append({"error": str(e), "file_name": fd["filename"]})
-            tasks[task_id]["table_data"].append([fd["filename"], "处理失败", f"错误: {str(e)}"])
+            import traceback
+            tb = traceback.format_exc()
+            print(f"\n{'='*60}", flush=True)
+            print(f"ERROR in batch: {filename}", flush=True)
+            print(f"Exception type: {type(e).__name__}", flush=True)
+            print(f"Exception message: {e}", flush=True)
+            print(f"Full traceback:\n{tb}", flush=True)
+            print(f"{'='*60}\n", flush=True)
+            tasks[task_id]["results"].append({"error": str(e), "file_name": filename})
+            tasks[task_id]["table_data"].append([filename, "处理失败", f"错误: {str(e)}"])
 
         tasks[task_id]["progress"] = i + 1
 
     tasks[task_id]["status"] = "done"
+    print(f">>> _run_batch finished, task_id={task_id}\n", flush=True)
 
 
 @app.get("/api/status/{task_id}")

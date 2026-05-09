@@ -1,4 +1,4 @@
-// 发票OCR · 智能识别终端 — 前端交互逻辑
+// QuickScan Invoices — 前端交互逻辑
 
 (function () {
     "use strict";

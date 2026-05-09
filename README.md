@@ -1,42 +1,39 @@
 ---
 # 详细文档见https://modelscope.cn/docs/%E5%88%9B%E7%A9%BA%E9%97%B4%E5%8D%A1%E7%89%87
-domain: #领域：cv/nlp/audio/multi-modal/AutoML
-# - cv
-tags: #自定义标签
+domain:
+tags:
 -
-datasets: #关联数据集
+datasets:
   evaluation:
-  #- iic/ICDAR13_HCTR_Dataset
+  -
   test:
-  #- iic/MTWI
+  -
   train:
-  #- iic/SIBR
-models: #关联模型
-#- iic/ofa_ocr-recognition_general_base_zh
-
-## 启动文件(若SDK为Gradio/Streamlit，默认为app.py, 若为Static HTML, 默认为index.html)
-# deployspec:
-#   entry_file: app.py
+  -
+models:
+-
 license: Apache License 2.0
 ---
-# 🧾 发票OCR识别系统
+# 🧾 QuickScan Invoices
 
-基于RapidOCR的智能发票识别系统，支持多种发票类型的自动识别和字段提取。
+基于 RapidOCR 的智能发票识别系统，支持多种发票类型的自动识别、批量处理和字段提取。
 
 ## ✨ 主要功能
 
 - **多类型发票识别** - 支持增值税专用发票、普通发票、电子发票等
-- **智能字段提取** - 自动提取发票号码、开票日期、金额、税额等关键信息
-- **多格式文件支持** - 支持图像文件(JPG、PNG、BMP等)和PDF文件
-- **Web界面** - 基于Gradio的现代化用户界面
-- **多格式输出** - 支持JSON和结构化文本输出
+- **智能字段提取** - 自动提取开票日期、价税合计等关键信息
+- **批量处理** - 支持同时上传和处理多个 PDF/图片文件
+- **多格式支持** - 支持图像文件(JPG、PNG、BMP、TIFF)和 PDF 文件
+- **高端 UI** - 深色金融终端风格，Playfair Display + DM Sans 排版
+- **结构化表格输出** - 清晰展示识别结果，含统计卡片和进度动画
+- **Excel 导出** - 识别结果导出为 Excel，含金额总计
+- **拖拽上传** - 支持拖放文件上传，带文件列表管理
 
 ## 🚀 快速开始
 
 ### 环境要求
 - Python 3.7+
 - Windows/Linux/MacOS
-- 对于PDF支持，需要安装poppler-utils (Linux/Mac) 或 poppler-windows (Windows)
 
 ### 安装依赖
 ```bash
@@ -45,53 +42,51 @@ pip install -r requirements.txt
 
 ### 启动系统
 ```bash
-# 普通模式
-python app.py
+# 使用启动脚本
+start.bat
 
-# MCP服务器模式
-python app.py --mcp-server
-
-# 指定端口和主机
-python app.py --host 0.0.0.0 --port 8080
+# 或直接运行
+python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-启动后访问 `http://localhost:7860` 即可使用系统。
+启动后访问 `http://localhost:8000` 即可使用。
 
 ## 📋 使用方法
 
-1. **上传发票文件** - 点击上传区域选择发票图片或PDF文件
-2. **调整参数** - 设置置信度阈值（可选）
-3. **开始识别** - 点击"开始识别"按钮
-4. **查看结果** - 在结果区域查看识别结果
+1. **上传发票** - 拖拽或点击上传区域选择发票文件
+2. **调整参数** - 设置置信度阈值（可选，默认0.5）
+3. **开始识别** - 点击「开始识别」按钮
+4. **查看结果** - 结果表格、统计卡片和 JSON 详情实时展示
+5. **导出结果** - 点击「导出 Excel」下载识别结果
 
 ## 📁 项目结构
 
 ```
-invoice_ocr/
-├── app.py                 # 主程序文件
-├── invoice_config.py      # 发票配置文件
-├── invoice_config.json    # 配置文件
-├── requirements.txt       # 依赖文件
-├── styles.css            # 样式文件
-├── README.md             # 项目说明
-├── images/               # 示例图片
-│   ├── fp1.jpg
-│   ├── fp2.jpg
-│   ├── fp3.jpg
-│   ├── fp4.jpg
-│   └── fp5.jpg
-└── examples/             # 示例文件
-    ├── invoice1.pdf
-    └── invoice2.pdf
+quickscan-invoices/
+├── main.py                 # FastAPI 应用（API 路由 + 静态文件服务）
+├── ocr_engine.py           # PDF转图片 + RapidOCR 调用
+├── field_extractor.py      # 发票类型检测 + 正则字段提取
+├── export.py               # Excel 导出（含总计行）
+├── invoice_config.py       # 发票类型正则配置
+├── templates/index.html    # 前端页面
+├── static/css/style.css    # 前端样式
+├── static/js/app.js        # 前端交互逻辑
+├── requirements.txt        # 依赖
+├── start.bat               # Windows 启动脚本
+└── tests/                  # pytest 单元测试
+    ├── test_field_extractor.py
+    └── test_export.py
 ```
 
 ## 🔧 技术栈
 
-- **RapidOCR** - 高性能OCR引擎
-- **Gradio** - 现代化Web界面
-- **PyMuPDF/pdf2image** - PDF文件处理
-- **正则表达式** - 智能字段提取
-- **Python** - 后端处理逻辑
+- **FastAPI** - 高性能 Web 框架
+- **uvicorn** - ASGI 服务器
+- **Jinja2** - 模板引擎
+- **RapidOCR** - OCR 引擎
+- **PyMuPDF (fitz)** - PDF 处理
+- **pandas + openpyxl** - Excel 导出
+- **原生 HTML/CSS/JS** - 前端界面（无框架依赖）
 
 ## 📊 支持的发票类型
 
@@ -100,34 +95,6 @@ invoice_ocr/
 - 电子发票
 - 通用机打发票
 - 手写发票
-
-## 📄 支持的文件格式
-
-### 图像文件
-- JPG/JPEG
-- PNG
-- BMP
-- TIFF/TIF
-
-### PDF文件
-- 单页PDF发票
-- 多页PDF文档（自动处理第一页）
-
-## 🔍 识别字段
-
-### 通用字段
-- 发票号码、发票代码
-- 开票日期
-- 购买方/销售方名称
-- 金额、税额、价税合计
-
-### 专用发票字段
-- 纳税人识别号
-- 地址、电话
-- 开户行及账号
-- 商品名称、规格型号
-- 数量、单价、税率
-- 收款人、复核、开票人
 
 ## 📄 许可证
 

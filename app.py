@@ -7,16 +7,9 @@
 import gradio as gr
 import json
 import os
-from datetime import datetime
-from typing import Dict, List, Any, Tuple
 from PIL import Image
 
-from ocr_engine import InvoiceImageProcessor, pdf_first_page_to_image, detect_file_type
-from invoice_config import (
-    get_invoice_types_list,
-    get_all_field_patterns,
-    validate_invoice_data,
-)
+from ocr_engine import InvoiceImageProcessor, pdf_first_page_to_image
 from export import export_table_data
 
 
@@ -123,19 +116,6 @@ def process_pdf_invoice(pdf_files, confidence_threshold: float = 0.5, progress=g
         return json.dumps([{"error": error_msg}]), [["", "批量处理失败", f"错误: {str(e)}"]], [[0, "批量PDF处理失败", "0.000"]]
 
 
-def process_mixed_input(file_input, confidence_threshold: float = 0.5):
-    if file_input is None:
-        return {"error": "请先上传文件"}, "请先上传文件", []
-    file_type = detect_file_type(file_input.name)
-    if file_type == "image":
-        return process_with_fields_image(file_input, confidence_threshold)
-    elif file_type == "pdf":
-        return process_pdf_invoice(file_input, confidence_threshold)
-    else:
-        error_msg = "不支持的文件格式，请上传图像或PDF文件"
-        return {"error": error_msg}, error_msg, [[0, "不支持的文件格式", "0.000"]]
-
-
 def process_with_fields_image(img_path, confidence_threshold: float = 0.5):
     """处理图像发票，返回结构化数据、结构化表格和原始文本表格"""
     if img_path is None:
@@ -155,18 +135,6 @@ def process_with_fields_image(img_path, confidence_threshold: float = 0.5):
     except Exception as e:
         error_msg = f"图片处理失败: {str(e)}"
         return {"error": error_msg}, [["", "处理失败", error_msg]], [[0, "图片处理失败", "0.000"]]
-
-
-def export_invoice_config(confidence_threshold):
-    """导出发票配置"""
-    config_data = {
-        "supported_invoice_types": get_invoice_types_list(),
-        "confidence_threshold": confidence_threshold,
-        "return_format": "JSON格式",
-        "field_patterns": get_all_field_patterns(),
-        "export_time": datetime.now().isoformat()
-    }
-    return json.dumps(config_data, ensure_ascii=False, indent=2)
 
 
 # 加载自定义CSS样式
@@ -207,8 +175,6 @@ with gr.Blocks(
         with gr.Column(scale=1):
             with gr.Group(elem_classes="output-section fade-in-up"):
                 gr.HTML('<div class="input-title">📊 识别结果</div>')
-                progress_bar = gr.Progress()
-
                 result_table = gr.Dataframe(
                     label="发票识别结果",
                     headers=["文件名", "开票日期", "价税合计小写"],

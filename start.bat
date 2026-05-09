@@ -1,37 +1,36 @@
 @echo off
-chcp 65001 >nul
 echo ========================================
-echo   发票OCR识别系统 启动脚本
+echo   Invoice OCR System
 echo ========================================
 echo.
 
-:: 检查 Python 是否存在
+:: Check Python
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo [错误] 未找到 Python，请先安装 Python 3.7+
+    echo [ERROR] Python not found. Please install Python 3.7+.
     pause
     exit /b 1
 )
 
-:: 检查依赖是否已安装
-echo [1/2] 检查依赖...
+:: Check dependencies
+echo [1/2] Checking dependencies...
 pip show gradio >nul 2>&1
 if errorlevel 1 (
-    echo 依赖未安装，正在安装...
+    echo Installing dependencies...
     pip install -r requirements.txt
     if errorlevel 1 (
-        echo [错误] 依赖安装失败
+        echo [ERROR] Failed to install dependencies.
         pause
         exit /b 1
     )
 ) else (
-    echo 依赖已安装
+    echo Dependencies OK.
 )
 echo.
 
-:: 启动应用
-echo [2/2] 启动应用...
-echo 访问地址: http://localhost:7860
+:: Start app
+echo [2/2] Starting app...
+echo URL: http://localhost:7860
 echo.
 python app.py
 pause

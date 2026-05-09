@@ -82,29 +82,36 @@ async def batch_recognize(
     confidence: float = 0.5,
 ):
     """批量文件识别，返回 task_id 用于轮询进度"""
+    # 在请求结束前先把文件内容全部读入内存
+    file_data = []
+    for f in files:
+        content = await f.read()
+        file_data.append({"filename": f.filename, "content": content})
+
     task_id = str(uuid.uuid4())
     tasks[task_id] = {
         "status": "pending",
         "progress": 0,
-        "total": len(files),
+        "total": len(file_data),
         "results": [],
         "table_data": [],
         "error": None,
     }
 
-    asyncio.create_task(_run_batch(task_id, files, confidence))
+    asyncio.create_task(_run_batch(task_id, file_data, confidence))
 
-    return {"task_id": task_id, "total": len(files)}
+    return {"task_id": task_id, "total": len(file_data)}
 
 
-async def _run_batch(task_id: str, files: list[UploadFile], confidence: float):
+async def _run_batch(task_id: str, file_data: list[dict], confidence: float):
     """后台执行批量识别"""
     tasks[task_id]["status"] = "processing"
 
-    for i, file in enumerate(files):
+    for i, fd in enumerate(file_data):
         try:
-            content = await file.read()
-            file_ext = os.path.splitext(file.filename)[1].lower()
+            filename = fd["filename"]
+            content = fd["content"]
+            file_ext = os.path.splitext(filename)[1].lower()
 
             if file_ext == ".pdf":
                 img = pdf_first_page_to_image(io.BytesIO(content))
@@ -116,18 +123,18 @@ async def _run_batch(task_id: str, files: list[UploadFile], confidence: float):
                 result_data, _, _ = invoice_processor.process_invoice(img, confidence)
                 result_data["source_type"] = "Image"
             else:
-                result_data = {"error": f"不支持的格式: {file_ext}", "file_name": file.filename}
+                result_data = {"error": f"不支持的格式: {file_ext}", "file_name": filename}
 
-            result_data["file_name"] = file.filename
+            result_data["file_name"] = filename
             tasks[task_id]["results"].append(result_data)
             tasks[task_id]["table_data"].append([
-                file.filename,
+                filename,
                 result_data.get("extracted_fields", {}).get("开票日期", "未识别"),
                 result_data.get("extracted_fields", {}).get("价税合计小写", "未识别"),
             ])
         except Exception as e:
-            tasks[task_id]["results"].append({"error": str(e), "file_name": file.filename})
-            tasks[task_id]["table_data"].append([file.filename, "处理失败", f"错误: {str(e)}"])
+            tasks[task_id]["results"].append({"error": str(e), "file_name": fd["filename"]})
+            tasks[task_id]["table_data"].append([fd["filename"], "处理失败", f"错误: {str(e)}"])
 
         tasks[task_id]["progress"] = i + 1
 

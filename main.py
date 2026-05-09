@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import FileResponse, HTMLResponse
 from PIL import Image
+import numpy as np
 
 from ocr_engine import InvoiceImageProcessor, pdf_first_page_to_image
 from export import export_table_data
@@ -48,18 +49,8 @@ async def recognize(
         file_ext = os.path.splitext(file.filename)[1].lower()
         content = await file.read()
 
-        if file_ext == ".pdf":
-            img = pdf_first_page_to_image(io.BytesIO(content))
-            result_data, _, _ = invoice_processor.process_invoice(img, confidence)
-            result_data["source_type"] = "PDF"
-            result_data["file_name"] = file.filename
-        elif file_ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"]:
-            img = Image.open(io.BytesIO(content))
-            result_data, _, _ = invoice_processor.process_invoice(img, confidence)
-            result_data["source_type"] = "Image"
-            result_data["file_name"] = file.filename
-        else:
-            raise HTTPException(status_code=400, detail=f"不支持的文件格式: {file_ext}")
+        result_data = _process_file_bytes(content, file_ext, confidence)
+        result_data["file_name"] = file.filename
 
         return {
             "status": "success",
@@ -72,6 +63,8 @@ async def recognize(
         }
     except HTTPException:
         raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"识别失败: {str(e)}")
 
@@ -103,6 +96,23 @@ async def batch_recognize(
     return {"task_id": task_id, "total": len(file_data)}
 
 
+def _process_file_bytes(content: bytes, file_ext: str, confidence: float) -> Dict[str, Any]:
+    """从文件字节数据中提取结构化信息，用 numpy array 避免 RapidOCR 关闭文件句柄"""
+    if file_ext == ".pdf":
+        img = pdf_first_page_to_image(io.BytesIO(content))
+        result_data, _, _ = invoice_processor.process_invoice(np.array(img), confidence)
+        result_data["source_type"] = "PDF"
+        result_data["processed_page"] = 1
+    elif file_ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"]:
+        img = Image.open(io.BytesIO(content))
+        result_data, _, _ = invoice_processor.process_invoice(np.array(img), confidence)
+        result_data["source_type"] = "Image"
+    else:
+        raise ValueError(f"不支持的格式: {file_ext}")
+
+    return result_data
+
+
 async def _run_batch(task_id: str, file_data: list[dict], confidence: float):
     """后台执行批量识别"""
     tasks[task_id]["status"] = "processing"
@@ -113,18 +123,7 @@ async def _run_batch(task_id: str, file_data: list[dict], confidence: float):
             content = fd["content"]
             file_ext = os.path.splitext(filename)[1].lower()
 
-            if file_ext == ".pdf":
-                img = pdf_first_page_to_image(io.BytesIO(content))
-                result_data, _, _ = invoice_processor.process_invoice(img, confidence)
-                result_data["source_type"] = "PDF"
-                result_data["processed_page"] = 1
-            elif file_ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif"]:
-                img = Image.open(io.BytesIO(content))
-                result_data, _, _ = invoice_processor.process_invoice(img, confidence)
-                result_data["source_type"] = "Image"
-            else:
-                result_data = {"error": f"不支持的格式: {file_ext}", "file_name": filename}
-
+            result_data = _process_file_bytes(content, file_ext, confidence)
             result_data["file_name"] = filename
             tasks[task_id]["results"].append(result_data)
             tasks[task_id]["table_data"].append([

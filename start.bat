@@ -14,7 +14,7 @@ if errorlevel 1 (
 
 :: Check dependencies
 echo [1/2] Checking dependencies...
-pip show gradio >nul 2>&1
+pip show fastapi >nul 2>&1
 if errorlevel 1 (
     echo Installing dependencies...
     pip install -r requirements.txt
@@ -30,7 +30,7 @@ echo.
 
 :: Start app
 echo [2/2] Starting app...
-echo URL: http://localhost:7860
+echo URL: http://localhost:8000
 echo.
-python app.py
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 pause

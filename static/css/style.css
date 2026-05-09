@@ -1,0 +1,360 @@
+/* 发票OCR识别系统 - 原生 CSS 样式 */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background-attachment: fixed;
+    color: #333;
+}
+
+.main-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 头部 */
+.header-section {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(81, 85, 141, 0.37);
+}
+
+.header-title {
+    font-size: 3rem;
+    font-weight: 700;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 10px;
+}
+
+.header-subtitle {
+    font-size: 1.2rem;
+    color: #666;
+    margin: 0 0 20px;
+}
+
+.header-features {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.feature-tag {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* 主内容两栏布局 */
+.content-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    align-items: stretch;
+}
+
+@media (max-width: 768px) {
+    .content-section {
+        grid-template-columns: 1fr;
+    }
+    .header-title {
+        font-size: 2rem;
+    }
+}
+
+/* 上传区和结果区 */
+.input-section,
+.output-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+    display: flex;
+    flex-direction: column;
+}
+
+.input-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Tab 导航 */
+.tab-nav {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    background: #e8e8e8;
+    color: #666;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.tab-btn.active {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+}
+
+.tab-btn:hover:not(.active) {
+    background: #ddd;
+}
+
+.tab-content {
+    display: none;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.tab-content.active {
+    display: flex;
+}
+
+/* 上传区域 */
+.upload-area {
+    border: 2px dashed #667eea;
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    background: rgba(102, 126, 234, 0.05);
+    transition: border-color 0.3s;
+}
+
+.upload-area:hover {
+    border-color: #764ba2;
+}
+
+.upload-area input[type="file"] {
+    display: block;
+    margin: 10px auto;
+    cursor: pointer;
+}
+
+.upload-hint {
+    color: #999;
+    font-size: 0.9rem;
+    margin: 5px 0 0;
+}
+
+/* 参数行 */
+.param-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.param-row label {
+    font-weight: 600;
+    min-width: 100px;
+}
+
+.param-row input[type="range"] {
+    flex: 1;
+    accent-color: #667eea;
+}
+
+/* 按钮 */
+.btn-primary {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* 进度条 */
+.progress-container {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 8px;
+    background: #e8e8e8;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar::after {
+    content: '';
+    display: block;
+    height: 100%;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    transition: width 0.3s;
+    width: var(--progress, 0%);
+}
+
+/* 结果表格 */
+.result-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.result-table th,
+.result-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+
+.result-table th {
+    background: #f8f8f8;
+    font-weight: 600;
+    color: #333;
+}
+
+.result-table tbody tr:hover {
+    background: #f5f5f5;
+}
+
+.empty-msg {
+    text-align: center;
+    color: #999;
+    padding: 40px;
+}
+
+/* 详情标签页 */
+.detail-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+    border-radius: 10px 10px 0 0;
+    overflow: hidden;
+}
+
+.detail-tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: #e8e8e8;
+    color: #666;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.detail-tab-btn.active {
+    background: #667eea;
+    color: white;
+}
+
+.detail-content {
+    display: none;
+    background: white;
+    border-radius: 0 0 10px 10px;
+    padding: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.detail-content.active {
+    display: block;
+}
+
+#json-output {
+    background: #f8f8f8;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin: 0;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+/* 原始文本表格 */
+.raw-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.raw-table th,
+.raw-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+
+.raw-table th {
+    background: #f8f8f8;
+    font-weight: 600;
+}
+
+/* 加载动画 */
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 淡入动画 */
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}

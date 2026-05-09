@@ -1,4 +1,6 @@
-gradio
+fastapi
+uvicorn
+jinja2
 python_multipart>=0.0.20
 numpy
 rapidocr
@@ -7,5 +9,3 @@ PyMuPDF
 pandas
 openpyxl
 pytest
-starlette>=0.40.0,<1.0
-pydantic>=2.11.10,<=2.12.4

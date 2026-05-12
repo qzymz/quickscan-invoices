@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickScan · 发票识别终端</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- 背景网格 -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <!-- Toast 通知容器 -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <div class="app-layout">
+        <!-- 顶部导航 -->
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <div class="logo-mark">
+                    <span class="logo-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="2" width="18" height="20" rx="2"/>
+                            <line x1="7" y1="7" x2="17" y2="7"/>
+                            <line x1="7" y1="11" x2="14" y2="11"/>
+                            <line x1="7" y1="15" x2="11" y2="15"/>
+                        </svg>
+                    </span>
+                </div>
+                <h1 class="logo-text">QuickScan <span class="logo-dot">·</span> 发票识别终端</h1>
+                <span class="version-badge">v2.0</span>
+            </div>
+            <div class="top-bar-right">
+                <span class="status-indicator" id="status-indicator">
+                    <span class="status-dot"></span>
+                    <span class="status-label">就绪</span>
+                </span>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="main-workspace">
+            <!-- 左侧面板：上传 -->
+            <section class="panel upload-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <span class="panel-icon">⬆</span>
+                        上传发票
+                    </h2>
+                    <span class="panel-count" id="file-count">0 个文件</span>
+                </div>
+
+                <div class="panel-body">
+                    <!-- Tab 切换 -->
+                    <div class="segmented-control">
+                        <button class="seg-btn active" data-tab="image">图片发票</button>
+                        <button class="seg-btn" data-tab="pdf">PDF发票</button>
+                    </div>
+
+                    <!-- 图片上传 -->
+                    <div class="tab-content active" id="tab-image">
+                        <div class="drop-zone" id="image-drop">
+                            <input type="file" id="image-files" accept="image/*" class="drop-input">
+                            <div class="drop-visual">
+                                <div class="drop-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                                        <path d="M21 15l-5-5L5 21"/>
+                                    </svg>
+                                </div>
+                                <p class="drop-text">拖拽图片到此处，或点击选择</p>
+                                <p class="drop-hint">支持 JPG / PNG / BMP / TIFF</p>
+                            </div>
+                        </div>
+                        <!-- 文件列表预览 -->
+                        <div class="file-list" id="image-file-list"></div>
+                    </div>
+
+                    <!-- PDF上传 -->
+                    <div class="tab-content" id="tab-pdf">
+                        <div class="drop-zone" id="pdf-drop">
+                            <input type="file" id="pdf-files" accept=".pdf" multiple class="drop-input">
+                            <div class="drop-visual">
+                                <div class="drop-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                        <polyline points="14,2 14,8 20,8"/>
+                                        <line x1="16" y1="13" x2="8" y2="13"/>
+                                        <line x1="16" y1="17" x2="8" y2="17"/>
+                                    </svg>
+                                </div>
+                                <p class="drop-text">拖拽PDF到此处，或点击选择</p>
+                                <p class="drop-hint">支持多文件批量上传</p>
+                            </div>
+                        </div>
+                        <div class="file-list" id="pdf-file-list"></div>
+                    </div>
+
+                    <!-- 参数控制 -->
+                    <div class="control-section">
+                        <div class="control-row">
+                            <label class="control-label">置信度阈值</label>
+                            <div class="slider-group">
+                                <input type="range" id="image-confidence" min="0.1" max="1.0" step="0.1" value="0.5">
+                                <span class="slider-value" id="image-confidence-value">0.5</span>
+                            </div>
+                        </div>
+                        <div class="control-row">
+                            <label class="control-label">置信度阈值</label>
+                            <div class="slider-group">
+                                <input type="range" id="pdf-confidence" min="0.1" max="1.0" step="0.1" value="0.5">
+                                <span class="slider-value" id="pdf-confidence-value">0.5</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div class="action-section">
+                        <button class="btn-accent" id="btn-image-recognize">
+                            <span class="btn-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
+                            </span>
+                            开始识别
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 右侧面板：结果 -->
+            <section class="panel results-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <span class="panel-icon">⬡</span>
+                        识别结果
+                    </h2>
+                    <div class="panel-actions">
+                        <button class="btn-secondary" id="btn-export" disabled>
+                            <span class="btn-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                    <polyline points="7,10 12,15 17,10"/>
+                                    <line x1="12" y1="15" x2="12" y2="3"/>
+                                </svg>
+                            </span>
+                            导出 Excel
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel-body">
+                    <!-- 统计卡片 -->
+                    <div class="stats-row" id="stats-row">
+                        <div class="stat-card">
+                            <span class="stat-label">识别数量</span>
+                            <span class="stat-value" id="stat-count">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">总金额</span>
+                            <span class="stat-value" id="stat-total">¥ 0.00</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">识别成功率</span>
+                            <span class="stat-value" id="stat-rate">--</span>
+                        </div>
+                    </div>
+
+                    <!-- 进度条 -->
+                    <div class="progress-section" id="progress-section">
+                        <div class="progress-info">
+                            <span class="progress-label">处理中</span>
+                            <span class="progress-pct" id="progress-pct">0%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <!-- 结果表格 -->
+                    <div class="table-container">
+                        <table class="data-table" id="result-table">
+                            <thead>
+                                <tr>
+                                    <th>文件名</th>
+                                    <th>开票日期</th>
+                                    <th>价税合计</th>
+                                </tr>
+                            </thead>
+                            <tbody id="result-tbody">
+                                <tr class="empty-row">
+                                    <td colspan="3">
+                                        <div class="empty-state">
+                                            <div class="empty-icon">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                                    <polyline points="14,2 14,8 20,8"/>
+                                                </svg>
+                                            </div>
+                                            <p>等待上传发票</p>
+                                            <span>上传PDF或图片发票开始识别</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 详情标签 -->
+                    <div class="detail-section">
+                        <div class="detail-tabs">
+                            <button class="detail-tab active" data-detail="json">JSON 数据</button>
+                            <button class="detail-tab" data-detail="raw">原始 OCR 文本</button>
+                        </div>
+                        <div class="detail-panel active" id="detail-json">
+                            <pre id="json-output" class="json-block">// 识别结果将显示在这里
+// 包含完整的结构化数据
+</pre>
+                        </div>
+                        <div class="detail-panel" id="detail-raw">
+                            <table class="raw-table" id="raw-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>文本内容</th>
+                                        <th>置信度</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="raw-tbody"></tbody>
+                            </table>
+                            <div class="empty-detail" id="raw-empty">暂无原始OCR数据</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 底部状态栏 -->
+        <footer class="bottom-bar">
+            <span class="bottom-info">快速 · 准确 · 智能</span>
+            <span class="bottom-info" id="bottom-time"></span>
+        </footer>
+    </div>
+
+    <!-- Tauri port discovery (only active in Tauri WebView) -->
+    <script>
+        (async function() {
+            // Detect if running inside Tauri WebView
+            const isTauri = typeof window.__TAURI__ !== 'undefined' ||
+                            window.location.protocol === 'tauri:' ||
+                            (window.__TAURI_INTERNALS__ !== undefined);
+
+            if (!isTauri) {
+                // Running in regular browser with uvicorn, use default port 8000
+                window.API_BASE = 'http://localhost:8000';
+                return;
+            }
+
+            try {
+                // Wait for Tauri to be ready
+                const { invoke } = window.__TAURI__.core;
+                const result = await invoke('get_port');
+                window.API_BASE = 'http://localhost:' + result.port;
+                console.log('Tauri sidecar port:', result.port);
+            } catch (e) {
+                console.error('Failed to get sidecar port:', e);
+                window.API_BASE = 'http://localhost:8000';
+            }
+        })();
+    </script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

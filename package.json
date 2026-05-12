@@ -1,0 +1,13 @@
+{
+  "name": "quickscan-invoices",
+  "version": "1.0.0",
+  "description": "QuickScan Invoices - Invoice OCR Desktop App",
+  "scripts": {
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

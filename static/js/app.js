@@ -57,6 +57,32 @@
         }, 3000);
     }
 
+    // ========== API error detection ==========
+    async function checkApiConnection() {
+        try {
+            const resp = await fetch(window.API_BASE + "/", { method: "GET" });
+            return resp.ok;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // Check API connection on load (only in Tauri)
+    setTimeout(async () => {
+        if (window.API_BASE && window.API_BASE.includes('localhost')) {
+            const connected = await checkApiConnection();
+            if (!connected) {
+                showToast("无法连接到 OCR 服务，请重启应用", "error");
+                const indicator = document.getElementById("status-indicator");
+                if (indicator) {
+                    indicator.className = "status-indicator error";
+                    const label = indicator.querySelector(".status-label");
+                    if (label) label.textContent = "离线";
+                }
+            }
+        }
+    }, 3000);
+
     // ========== Tab 切换 ==========
     document.querySelectorAll(".seg-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -290,7 +316,7 @@
                 formData.append("file", files[i]);
                 formData.append("confidence", confidence);
 
-                const resp = await fetch("/api/recognize", { method: "POST", body: formData });
+                const resp = await fetch(window.API_BASE + "/api/recognize", { method: "POST", body: formData });
 
                 if (!resp.ok) {
                     const err = await resp.json();
@@ -353,7 +379,7 @@
         }
 
         try {
-            const resp = await fetch("/api/export", {
+            const resp = await fetch(window.API_BASE + "/api/export", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(tableData),
@@ -420,7 +446,7 @@
                 formData.append("file", files[i]);
                 formData.append("confidence", confidence);
 
-                const resp = await fetch("/api/recognize", { method: "POST", body: formData });
+                const resp = await fetch(window.API_BASE + "/api/recognize", { method: "POST", body: formData });
 
                 if (!resp.ok) {
                     const err = await resp.json();
@@ -474,7 +500,7 @@
             }
             formData.append("confidence", confidence);
 
-            const resp = await fetch("/api/batch-recognize", { method: "POST", body: formData });
+            const resp = await fetch(window.API_BASE + "/api/batch-recognize", { method: "POST", body: formData });
 
             if (!resp.ok) {
                 const err = await resp.json();
@@ -487,7 +513,7 @@
             const { task_id, total } = await resp.json();
 
             const pollInterval = setInterval(async () => {
-                const statusResp = await fetch("/api/status/" + task_id);
+                const statusResp = await fetch(window.API_BASE + "/api/status/" + task_id);
                 const status = await statusResp.json();
 
                 showProgress(status.progress, status.total);

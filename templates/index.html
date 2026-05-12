@@ -248,6 +248,32 @@
         </footer>
     </div>
 
+    <!-- Tauri port discovery (only active in Tauri WebView) -->
+    <script>
+        (async function() {
+            // Detect if running inside Tauri WebView
+            const isTauri = typeof window.__TAURI__ !== 'undefined' ||
+                            window.location.protocol === 'tauri:' ||
+                            (window.__TAURI_INTERNALS__ !== undefined);
+
+            if (!isTauri) {
+                // Running in regular browser with uvicorn, use default port 8000
+                window.API_BASE = 'http://localhost:8000';
+                return;
+            }
+
+            try {
+                // Wait for Tauri to be ready
+                const { invoke } = window.__TAURI__.core;
+                const result = await invoke('get_port');
+                window.API_BASE = 'http://localhost:' + result.port;
+                console.log('Tauri sidecar port:', result.port);
+            } catch (e) {
+                console.error('Failed to get sidecar port:', e);
+                window.API_BASE = 'http://localhost:8000';
+            }
+        })();
+    </script>
     <script src="/static/js/app.js"></script>
 </body>
 </html>

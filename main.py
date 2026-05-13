@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Dict, Any
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import FileResponse, HTMLResponse
@@ -27,6 +28,15 @@ logger = logging.getLogger("quickscan")
 logger.setLevel(logging.DEBUG)
 
 app = FastAPI(title="QuickScan Invoices")
+
+# CORS 支持（Tauri dev 模式下跨域请求）
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # 静态文件和模板
 BASE_DIR = Path(__file__).parent

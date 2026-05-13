@@ -1,7 +1,7 @@
 use serde::Serialize;
 use std::process::{Child, Command};
 use std::sync::Mutex;
-use tauri::Emitter;
+use tauri::{Emitter, Manager};
 
 struct AppState {
     port: u16,
@@ -20,8 +20,8 @@ fn get_port(state: tauri::State<AppState>) -> PortResponse {
 
 #[tauri::command]
 fn sidecar_status(state: tauri::State<AppState>) -> String {
-    let child = state.child.lock().unwrap();
-    match &*child {
+    let mut child = state.child.lock().unwrap();
+    match child.as_mut() {
         Some(c) => match c.try_wait() {
             Ok(Some(status)) => format!("Exited: {}", status),
             Ok(None) => "Running".to_string(),

@@ -316,7 +316,7 @@
                 formData.append("file", files[i]);
                 formData.append("confidence", confidence);
 
-                const resp = await fetch("/api/recognize", { method: "POST", body: formData });
+                const resp = await fetch(window.API_BASE + "/api/recognize", { method: "POST", body: formData });
 
                 if (!resp.ok) {
                     const err = await resp.json();
@@ -379,7 +379,7 @@
         }
 
         try {
-            const resp = await fetch("/api/export", {
+            const resp = await fetch(window.API_BASE + "/api/export", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(tableData),
@@ -446,7 +446,7 @@
                 formData.append("file", files[i]);
                 formData.append("confidence", confidence);
 
-                const resp = await fetch("/api/recognize", { method: "POST", body: formData });
+                const resp = await fetch(window.API_BASE + "/api/recognize", { method: "POST", body: formData });
 
                 if (!resp.ok) {
                     const err = await resp.json();
@@ -500,7 +500,7 @@
             }
             formData.append("confidence", confidence);
 
-            const resp = await fetch("/api/batch-recognize", { method: "POST", body: formData });
+            const resp = await fetch(window.API_BASE + "/api/batch-recognize", { method: "POST", body: formData });
 
             if (!resp.ok) {
                 const err = await resp.json();
@@ -513,7 +513,7 @@
             const { task_id, total } = await resp.json();
 
             const pollInterval = setInterval(async () => {
-                const statusResp = await fetch("/api/status/" + task_id);
+                const statusResp = await fetch(window.API_BASE + "/api/status/" + task_id);
                 const status = await statusResp.json();
 
                 showProgress(status.progress, status.total);

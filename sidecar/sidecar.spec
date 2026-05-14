@@ -1,12 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 a = Analysis(
     ['sidecar_app.py'],
-    pathex=[],
+    pathex=['..'],
     binaries=[],
     datas=[
         ('../templates', 'templates'),
         ('../static', 'static'),
-    ],
+    ] + list(collect_data_files('rapidocr', include_py_files=True)),
     hiddenimports=[
         'main',
         'ocr_engine',
@@ -26,6 +27,106 @@ a = Analysis(
         'openpyxl',
         'fastapi',
         'jinja2',
+        # FastAPI dependencies
+        'fastapi.middleware.cors',
+        'fastapi.staticfiles',
+        'fastapi.templating',
+        'fastapi.responses',
+        'fastapi.openapi',
+        'fastapi.openapi.utils',
+        'starlette.middleware.cors',
+        'starlette.staticfiles',
+        'starlette.templating',
+        'starlette.responses',
+        # Template dependencies
+        'jinja2.ext',
+        'jinja2.loaders',
+        # PyMuPDF dependencies
+        'PyMuPDF',
+        'pymupdf',
+        'pymupdf.fonts',
+        # RapidOCR dependencies
+        'rapidocr_onnxruntime',
+        'rapidocr_onnxruntime.main',
+        'rapidocr_onnxruntime.ch_ppocr_v2_det',
+        'rapidocr_onnxruntime.ch_ppocr_v2_rec',
+        'rapidocr_onnxruntime.ch_ppocr_v2_cls',
+        'cv2',
+        'onnxruntime',
+        # Pillow
+        'PIL.Image',
+        'PIL._binary',
+        'PIL.JpegImagePlugin',
+        'PIL.PngImagePlugin',
+        'PIL.BmpImagePlugin',
+        'PIL.TiffImagePlugin',
+        'PIL.GifImagePlugin',
+        'PIL.WebPImagePlugin',
+        # Uvicorn
+        'uvicorn.main',
+        'uvicorn.config',
+        'uvicorn.lifespan',
+        'uvicorn.server',
+        'uvicorn.protocols',
+        'uvicorn.protocols.http',
+        'uvicorn.protocols.http.h11_impl',
+        'uvicorn.protocols.http.httptools_impl',
+        'uvicorn.loops',
+        'uvicorn.loops.asyncio',
+        'uvicorn.logging',
+        'uvicorn.importer',
+        'h11',
+        'httptools',
+        'websockets',
+        'click',
+        # Starlette
+        'starlette.applications',
+        'starlette.routing',
+        'starlette.requests',
+        'starlette.endpoints',
+        'starlette.exceptions',
+        'starlette.concurrency',
+        'starlette.convertors',
+        'starlette.background',
+        'starlette.types',
+        'starlette.formparsers',
+        'starlette.datastructures',
+        # Asyncio
+        'asyncio',
+        'concurrent.futures',
+        # JSON
+        'json',
+        # Threading
+        'threading',
+        # Socket
+        'socket',
+        # Signal
+        'signal',
+        # OS
+        'os',
+        'os.path',
+        'tempfile',
+        'pathlib',
+        # Typing
+        'typing',
+        'collections',
+        'collections.abc',
+        # Math
+        'math',
+        # Re
+        're',
+        # Datetime
+        'datetime',
+        # Time
+        'time',
+        # Sys
+        'sys',
+        # IO
+        'io',
+        # Logging
+        'logging',
+        'logging.config',
+        'logging.handlers',
     ],
     hookspath=[],
     hooksconfig={},

@@ -254,23 +254,30 @@
             // Detect if running inside Tauri WebView
             const isTauri = typeof window.__TAURI__ !== 'undefined' ||
                             window.location.protocol === 'tauri:' ||
-                            (window.__TAURI_INTERNALS__ !== undefined);
+                            (typeof window.__TAURI_INTERNALS__ !== 'undefined');
+
+            console.log('Tauri detection:', isTauri,
+                        '__TAURI__:', typeof window.__TAURI__,
+                        '__TAURI_INTERNALS__:', typeof window.__TAURI_INTERNALS__);
 
             if (!isTauri) {
                 // Running in regular browser with uvicorn, use default port 8000
+                console.log('Not in Tauri, using port 8000');
                 window.API_BASE = 'http://localhost:8000';
                 return;
             }
 
             try {
                 // Wait for Tauri to be ready
-                const { invoke } = window.__TAURI__.core;
+                const invoke = window.__TAURI__.core.invoke;
                 const result = await invoke('get_port');
                 window.API_BASE = 'http://localhost:' + result.port;
-                console.log('Tauri sidecar port:', result.port);
+                console.log('Tauri sidecar port:', result.port, 'API_BASE:', window.API_BASE);
             } catch (e) {
                 console.error('Failed to get sidecar port:', e);
+                // Fallback: try port 8000
                 window.API_BASE = 'http://localhost:8000';
+                console.log('Fallback to port 8000');
             }
         })();
     </script>

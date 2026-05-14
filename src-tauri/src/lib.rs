@@ -1,7 +1,9 @@
 use serde::Serialize;
+use std::fs::OpenOptions;
+use std::io::Write;
 use std::process::{Child, Command};
 use std::sync::Mutex;
-use tauri::{Emitter, Manager};
+use tauri::Manager;
 
 struct AppState {
     port: u16,
@@ -31,6 +33,17 @@ fn sidecar_status(state: tauri::State<AppState>) -> String {
     }
 }
 
+fn log_to_file(exe_dir: &std::path::Path, line: &str) {
+    let log_path = exe_dir.join("sidecar.log");
+    if let Ok(mut f) = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(log_path)
+    {
+        let _ = writeln!(f, "{}", line);
+    }
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -49,94 +62,95 @@ pub fn run() {
                 .join("quickscan-sidecar.exe");
 
             #[cfg(not(debug_assertions))]
-            let sidecar_path = app
+            let resource_path = app
                 .path()
                 .resolve(
-                    "sidecar/quickscan-sidecar/quickscan-sidecar.exe",
+                    "sidecar/quickscan-sidecar.exe",
                     tauri::path::BaseDirectory::Resource,
                 )
-                .expect("Failed to resolve sidecar resource path");
+                .ok();
+
+            #[cfg(not(debug_assertions))]
+            let sidecar_path = resource_path
+                .filter(|p| p.exists())
+                .unwrap_or_else(|| {
+                    std::env::current_exe()
+                        .ok()
+                        .and_then(|exe| exe.parent().map(|p| p.to_path_buf()))
+                        .unwrap_or_default()
+                        .join("sidecar")
+                        .join("quickscan-sidecar.exe")
+                });
 
             if !sidecar_path.exists() {
-                // In dev mode without bundled sidecar, fall back to python + uvicorn
-                #[cfg(debug_assertions)]
-                {
-                    println!(
-                        "Sidecar not found at {:?}, using python uvicorn directly",
-                        sidecar_path
-                    );
-                    let project_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-                        .parent()
-                        .unwrap()
-                        .to_path_buf();
-
-                    let child = Command::new("python")
-                        .args([
-                            "-m",
-                            "uvicorn",
-                            "main:app",
-                            "--host",
-                            "127.0.0.1",
-                            "--port",
-                            &port.to_string(),
-                        ])
-                        .current_dir(&project_root)
-                        .spawn();
-
-                    match child {
-                        Ok(c) => {
-                            println!("Python sidecar started on port {}", port);
-                            app.manage(AppState {
-                                port,
-                                child: Mutex::new(Some(c)),
-                            });
-                            return Ok(());
-                        }
-                        Err(e) => {
-                            eprintln!("Failed to start Python sidecar: {}", e);
-                            return Err(Box::new(std::io::Error::new(
-                                std::io::ErrorKind::Other,
-                                format!("无法启动 OCR 引擎: {}", e),
-                            )));
-                        }
-                    }
-                }
-
                 #[cfg(not(debug_assertions))]
                 {
+                    let exe_dir = std::env::current_exe()
+                        .ok()
+                        .and_then(|e| e.parent().map(|p| p.to_path_buf()))
+                        .unwrap_or_default();
+                    log_to_file(&exe_dir, &format!("Sidecar not found at {:?}", sidecar_path));
                     return Err(Box::new(std::io::Error::new(
                         std::io::ErrorKind::NotFound,
-                        "OCR 引擎未找到，请重新安装应用",
+                        "OCR 引擎未找到，请确保 sidecar/quickscan-sidecar/quickscan-sidecar.exe 存在",
                     )));
                 }
             }
 
+            let sidecar_dir = sidecar_path
+                .parent()
+                .unwrap_or_else(|| std::path::Path::new("."))
+                .to_path_buf();
+
+            #[cfg(not(debug_assertions))]
+            {
+                let exe_dir = std::env::current_exe()
+                    .ok()
+                    .and_then(|e| e.parent().map(|p| p.to_path_buf()))
+                    .unwrap_or_default();
+                log_to_file(
+                    &exe_dir,
+                    &format!(
+                        "Launching sidecar: {:?} (cwd: {:?}, port: {})",
+                        sidecar_path, sidecar_dir, port
+                    ),
+                );
+            }
+
+            // Start sidecar without capturing stdout (prevents blocking)
             let child = Command::new(&sidecar_path)
+                .current_dir(&sidecar_dir)
                 .args(["--port", &port.to_string()])
-                .stdout(std::process::Stdio::piped())
-                .stderr(std::process::Stdio::piped())
                 .spawn();
 
-            match child {
-                Ok(c) => {
-                    println!("Sidecar started on port {}", port);
-                    app.manage(AppState {
-                        port,
-                        child: Mutex::new(Some(c)),
-                    });
-                    Ok(())
-                }
+            let child = match child {
+                Ok(c) => c,
                 Err(e) => {
-                    eprintln!("Failed to start sidecar: {}", e);
-                    Err(Box::new(std::io::Error::new(
+                    #[cfg(not(debug_assertions))]
+                    {
+                        let exe_dir = std::env::current_exe()
+                            .ok()
+                            .and_then(|e| e.parent().map(|p| p.to_path_buf()))
+                            .unwrap_or_default();
+                        log_to_file(&exe_dir, &format!("Failed to spawn: {}", e));
+                    }
+                    return Err(Box::new(std::io::Error::new(
                         std::io::ErrorKind::Other,
                         format!("无法启动 OCR 引擎: {}", e),
-                    )))
+                    )));
                 }
-            }
+            };
+
+            // We already know the port since we passed it via --port
+            println!("Sidecar started on port {}", port);
+            app.manage(AppState {
+                port,
+                child: Mutex::new(Some(child)),
+            });
+            Ok(())
         })
         .on_window_event(|_window, event| {
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+            if let tauri::WindowEvent::CloseRequested { api: _, .. } = event {
                 // Graceful shutdown handled in cleanup
             }
         })
@@ -145,7 +159,6 @@ pub fn run() {
         .expect("error while building tauri application")
         .run(|app_handle, event| {
             if let tauri::RunEvent::Exit = event {
-                // Kill sidecar process on exit
                 let state = app_handle.try_state::<AppState>();
                 if let Some(state) = state {
                     let mut child = state.child.lock().unwrap();

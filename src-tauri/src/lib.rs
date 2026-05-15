@@ -1,9 +1,15 @@
 use serde::Serialize;
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::path::PathBuf;
 use std::process::{Child, Command};
 use std::sync::Mutex;
 use tauri::Manager;
+
+#[cfg(windows)]
+const SIDECAR_NAME: &str = "quickscan-sidecar.exe";
+#[cfg(not(windows))]
+const SIDECAR_NAME: &str = "quickscan-sidecar";
 
 struct AppState {
     port: u16,
@@ -33,8 +39,9 @@ fn sidecar_status(state: tauri::State<AppState>) -> String {
     }
 }
 
-fn log_to_file(exe_dir: &std::path::Path, line: &str) {
-    let log_path = exe_dir.join("sidecar.log");
+#[allow(dead_code)]
+fn log_to_file(app_dir: &PathBuf, line: &str) {
+    let log_path = app_dir.join("sidecar.log");
     if let Ok(mut f) = OpenOptions::new()
         .create(true)
         .append(true)
@@ -44,11 +51,14 @@ fn log_to_file(exe_dir: &std::path::Path, line: &str) {
     }
 }
 
+fn sidecar_name() -> &'static str {
+    SIDECAR_NAME
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
-            // Find a free port
             let port = portpicker::pick_unused_port().expect("No free ports available");
 
             // Determine sidecar path
@@ -59,13 +69,13 @@ pub fn run() {
                 .join("sidecar")
                 .join("dist")
                 .join("quickscan-sidecar")
-                .join("quickscan-sidecar.exe");
+                .join(sidecar_name());
 
             #[cfg(not(debug_assertions))]
             let resource_path = app
                 .path()
                 .resolve(
-                    "sidecar/quickscan-sidecar.exe",
+                    &format!("sidecar/{}", sidecar_name()),
                     tauri::path::BaseDirectory::Resource,
                 )
                 .ok();
@@ -79,20 +89,21 @@ pub fn run() {
                         .and_then(|exe| exe.parent().map(|p| p.to_path_buf()))
                         .unwrap_or_default()
                         .join("sidecar")
-                        .join("quickscan-sidecar.exe")
+                        .join(sidecar_name())
                 });
 
             if !sidecar_path.exists() {
                 #[cfg(not(debug_assertions))]
                 {
-                    let exe_dir = std::env::current_exe()
-                        .ok()
-                        .and_then(|e| e.parent().map(|p| p.to_path_buf()))
-                        .unwrap_or_default();
-                    log_to_file(&exe_dir, &format!("Sidecar not found at {:?}", sidecar_path));
+                    let app_dir = app
+                        .path()
+                        .app_data_dir()
+                        .unwrap_or_else(|_| PathBuf::from("."));
+                    let _ = std::fs::create_dir_all(&app_dir);
+                    log_to_file(&app_dir, &format!("Sidecar not found at {:?}", sidecar_path));
                     return Err(Box::new(std::io::Error::new(
                         std::io::ErrorKind::NotFound,
-                        "OCR 引擎未找到，请确保 sidecar/quickscan-sidecar/quickscan-sidecar.exe 存在",
+                        "OCR 引擎未找到",
                     )));
                 }
             }
@@ -104,12 +115,13 @@ pub fn run() {
 
             #[cfg(not(debug_assertions))]
             {
-                let exe_dir = std::env::current_exe()
-                    .ok()
-                    .and_then(|e| e.parent().map(|p| p.to_path_buf()))
-                    .unwrap_or_default();
+                let app_dir = app
+                    .path()
+                    .app_data_dir()
+                    .unwrap_or_else(|_| PathBuf::from("."));
+                let _ = std::fs::create_dir_all(&app_dir);
                 log_to_file(
-                    &exe_dir,
+                    &app_dir,
                     &format!(
                         "Launching sidecar: {:?} (cwd: {:?}, port: {})",
                         sidecar_path, sidecar_dir, port
@@ -117,7 +129,6 @@ pub fn run() {
                 );
             }
 
-            // Start sidecar without capturing stdout (prevents blocking)
             let child = Command::new(&sidecar_path)
                 .current_dir(&sidecar_dir)
                 .args(["--port", &port.to_string()])
@@ -128,11 +139,11 @@ pub fn run() {
                 Err(e) => {
                     #[cfg(not(debug_assertions))]
                     {
-                        let exe_dir = std::env::current_exe()
-                            .ok()
-                            .and_then(|e| e.parent().map(|p| p.to_path_buf()))
-                            .unwrap_or_default();
-                        log_to_file(&exe_dir, &format!("Failed to spawn: {}", e));
+                        let app_dir = app
+                            .path()
+                            .app_data_dir()
+                            .unwrap_or_else(|_| PathBuf::from("."));
+                        log_to_file(&app_dir, &format!("Failed to spawn: {}", e));
                     }
                     return Err(Box::new(std::io::Error::new(
                         std::io::ErrorKind::Other,
@@ -141,7 +152,6 @@ pub fn run() {
                 }
             };
 
-            // We already know the port since we passed it via --port
             println!("Sidecar started on port {}", port);
             app.manage(AppState {
                 port,

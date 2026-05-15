@@ -302,81 +302,25 @@
     newBtn.addEventListener("click", async () => {
         const activeTab = document.querySelector(".seg-btn.active").dataset.tab;
         if (activeTab === "pdf") {
-            await processPdfBatch();
+            await processBatch("pdf");
         } else {
-            await processImageBatch();
+            await processBatch("image");
         }
     });
 
-    // ========== 导出 Excel ==========
-
-    async function processImageBatch() {
-        const files = uploadedFiles.image;
+    async function processBatch(fileType) {
+        const files = fileType === "pdf" ? uploadedFiles.pdf : uploadedFiles.image;
         if (files.length === 0) {
-            showToast("请先选择或拖拽图片文件", "warning");
+            showToast(fileType === "pdf" ? "请先选择或拖拽PDF文件" : "请先选择或拖拽图片文件", "warning");
             return;
         }
 
         setButtonsLoading(true);
         setStatus("processing");
         hideProgress();
-        const confidence = parseFloat(els.imgConfidence.value);
-
-        try {
-            const results = [];
-            const rows = [];
-
-            for (let i = 0; i < files.length; i++) {
-                const formData = new FormData();
-                formData.append("file", files[i]);
-                formData.append("confidence", confidence);
-
-                const resp = await fetch(window.API_BASE + "/api/recognize", { method: "POST", body: formData });
-
-                if (!resp.ok) {
-                    const err = await resp.json();
-                    results.push({ error: err.detail, file_name: files[i].name });
-                    rows.push([files[i].name, "处理失败", `错误: ${err.detail}`]);
-                    showToast(`${files[i].name} 识别失败`, "error");
-                    continue;
-                }
-
-                const data = await resp.json();
-                results.push(data.result);
-                rows.push(data.table_row);
-
-                showProgress(i + 1, files.length);
-                updateResultTable(rows, results);
-                showJsonResult(results);
-                updateStats(rows, results);
-
-                if (i === 0 && data.result.raw_ocr_results) {
-                    showRawTable(data.result.raw_ocr_results);
-                }
-            }
-
-            showToast(`成功识别 ${results.length} 个文件`, "success");
-            setStatus("done");
-            setTimeout(() => { hideProgress(); setStatus(""); }, 3000);
-        } catch (e) {
-            showToast("请求失败: " + e.message, "error");
-            setStatus("error");
-        } finally {
-            setButtonsLoading(false);
-        }
-    }
-
-    async function processPdfBatch() {
-        const files = uploadedFiles.pdf;
-        if (files.length === 0) {
-            showToast("请先选择或拖拽PDF文件", "warning");
-            return;
-        }
-
-        setButtonsLoading(true);
-        setStatus("processing");
-        hideProgress();
-        const confidence = parseFloat(els.pdfConfidence.value);
+        const confidence = fileType === "pdf"
+            ? parseFloat(els.pdfConfidence.value)
+            : parseFloat(els.imgConfidence.value);
 
         try {
             const formData = new FormData();
@@ -388,36 +332,47 @@
             const resp = await fetch(window.API_BASE + "/api/batch-recognize", { method: "POST", body: formData });
 
             if (!resp.ok) {
-                const err = await resp.json();
-                showToast("提交失败: " + err.detail, "error");
+                let detail = "未知错误";
+                try { const err = await resp.json(); detail = err.detail || detail; } catch (_) {}
+                showToast("提交失败: " + detail, "error");
                 setStatus("error");
                 setButtonsLoading(false);
                 return;
             }
 
             const { task_id, total } = await resp.json();
-
             const pollInterval = setInterval(async () => {
-                const statusResp = await fetch(window.API_BASE + "/api/status/" + task_id);
-                const status = await statusResp.json();
+                try {
+                    const statusResp = await fetch(window.API_BASE + "/api/status/" + task_id);
+                    if (!statusResp.ok) { clearInterval(pollInterval); return; }
+                    const status = await statusResp.json();
 
-                showProgress(status.progress, status.total);
+                    showProgress(status.progress, status.total);
 
-                if (status.table_data) {
-                    updateResultTable(status.table_data, status.results);
-                    showJsonResult(status.results);
-                    updateStats(status.table_data, status.results);
-
-                    if (status.results.length > 0 && status.results[0].raw_ocr_results) {
-                        showRawTable(status.results[0].raw_ocr_results);
+                    if (status.table_data) {
+                        updateResultTable(status.table_data, status.results);
+                        showJsonResult(status.results);
+                        updateStats(status.table_data, status.results);
+                        if (status.results.length > 0 && status.results[0].raw_ocr_results) {
+                            showRawTable(status.results[0].raw_ocr_results);
+                        }
                     }
-                }
 
-                if (status.status === "done" || status.status === "error") {
+                    if (status.status === "done" || status.status === "error") {
+                        clearInterval(pollInterval);
+                        if (status.status === "done") {
+                            showToast(`批量识别完成，共 ${status.total} 个文件`, "success");
+                        } else {
+                            showToast("批量识别出错", "error");
+                        }
+                        setStatus("done");
+                        setTimeout(() => { hideProgress(); setStatus(""); }, 3000);
+                        setButtonsLoading(false);
+                    }
+                } catch (e) {
                     clearInterval(pollInterval);
-                    showToast(`批量识别完成，共 ${status.total} 个文件`, "success");
-                    setStatus("done");
-                    setTimeout(() => { hideProgress(); setStatus(""); }, 3000);
+                    showToast("请求失败: " + e.message, "error");
+                    setStatus("error");
                     setButtonsLoading(false);
                 }
             }, 500);
@@ -427,4 +382,40 @@
             setButtonsLoading(false);
         }
     }
+
+    // ========== 导出 Excel ==========
+    els.btnExport.addEventListener("click", async () => {
+        if (tableData.length === 0) {
+            showToast("无数据可导出", "warning");
+            return;
+        }
+
+        try {
+            const resp = await fetch(window.API_BASE + "/api/export", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(tableData),
+            });
+
+            if (!resp.ok) {
+                let detail = "导出失败";
+                try { const err = await resp.json(); detail = err.detail || detail; } catch (_) {}
+                showToast("导出失败: " + detail, "error");
+                return;
+            }
+
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "invoice_results.xlsx";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("导出成功", "success");
+        } catch (e) {
+            showToast("导出失败: " + e.message, "error");
+        }
+    });
 })();

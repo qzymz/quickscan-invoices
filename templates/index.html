@@ -67,30 +67,23 @@
                 </div>
 
                 <div class="panel-body">
-                    <!-- Tab 切换 -->
-                    <div class="segmented-control">
-                        <button class="seg-btn active">统一上传</button>
-                    </div>
-
-                    <!-- 统一上传区域 -->
-                    <div class="tab-content active" id="tab-pdf">
-                        <div class="drop-zone" id="pdf-drop">
-                            <input type="file" id="files-input" accept=".pdf,.jpg,.jpeg,.png,.bmp,.tiff,.tif,.gif,.webp" multiple class="drop-input">
-                            <div class="drop-visual">
-                                <div class="drop-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                                        <polyline points="17,8 12,3 7,8"/>
-                                        <line x1="12" y1="3" x2="12" y2="15"/>
-                                    </svg>
-                                </div>
-                                <p class="drop-text">拖拽文件到此处，或点击选择</p>
-                                <p class="drop-hint">支持 PDF / JPG / PNG / BMP / TIFF</p>
+                    <!-- 上传区域 -->
+                    <div class="drop-zone" id="pdf-drop">
+                        <input type="file" id="files-input" accept=".pdf,.jpg,.jpeg,.png,.bmp,.tiff,.tif,.gif,.webp" multiple class="drop-input">
+                        <div class="drop-visual">
+                            <div class="drop-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                    <polyline points="17,8 12,3 7,8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
                             </div>
+                            <p class="drop-text">拖拽文件到此处，或点击选择</p>
+                            <p class="drop-hint">支持 PDF / JPG / PNG / BMP / TIFF</p>
                         </div>
-                        <div class="file-list" id="file-list">
-                            <div class="empty-hint">拖拽文件或点击上传</div>
-                        </div>
+                    </div>
+                    <div class="file-list" id="file-list">
+                        <div class="empty-hint">拖拽文件或点击上传</div>
                     </div>
 
                     <!-- 参数控制 -->

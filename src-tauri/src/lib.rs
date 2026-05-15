@@ -149,9 +149,15 @@ pub fn run() {
             });
             Ok(())
         })
-        .on_window_event(|_window, event| {
-            if let tauri::WindowEvent::CloseRequested { api: _, .. } = event {
-                // Graceful shutdown handled in cleanup
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                if let Some(state) = window.try_state::<AppState>() {
+                    if let Ok(mut child) = state.child.lock() {
+                        if let Some(ref mut c) = *child {
+                            let _ = c.kill();
+                        }
+                    }
+                }
             }
         })
         .invoke_handler(tauri::generate_handler![get_port, sidecar_status])

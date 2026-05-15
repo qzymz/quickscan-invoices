@@ -24,6 +24,7 @@ from ocr_engine import InvoiceImageProcessor, pdf_first_page_to_image
 from export import export_table_data
 
 import logging
+import time
 logger = logging.getLogger("quickscan")
 logger.setLevel(logging.DEBUG)
 
@@ -48,6 +49,15 @@ invoice_processor = InvoiceImageProcessor()
 
 # 任务状态存储（内存，适合单实例）
 tasks: Dict[str, Dict[str, Any]] = {}
+TASK_TTL = 300  # 5 minutes
+
+def _cleanup_old_tasks():
+    """Remove completed tasks older than TASK_TTL"""
+    now = time.time()
+    expired = [tid for tid, t in tasks.items()
+               if t["status"] in ("done", "error") and now - t.get("created_at", now) > TASK_TTL]
+    for tid in expired:
+        del tasks[tid]
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -105,6 +115,7 @@ async def batch_recognize(
         "total": len(file_data),
         "results": [],
         "table_data": [],
+        "created_at": time.time(),
         "error": None,
     }
 
@@ -211,6 +222,7 @@ async def _run_batch(task_id: str, file_data: list[dict], confidence: float):
 @app.get("/api/status/{task_id}")
 async def get_status(task_id: str):
     """轮询获取任务进度和结果"""
+    _cleanup_old_tasks()
     if task_id not in tasks:
         raise HTTPException(status_code=404, detail="任务不存在")
 

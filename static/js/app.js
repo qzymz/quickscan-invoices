@@ -294,136 +294,21 @@
         });
     }
 
-    // ========== 识别：图片 ==========
-    els.btnImgRecognize.addEventListener("click", async () => {
-        const files = uploadedFiles.image;
-        if (files.length === 0) {
-            showToast("请先选择或拖拽图片文件", "warning");
-            return;
-        }
-
-        setButtonsLoading(true);
-        setStatus("processing");
-        hideProgress();
-        const confidence = parseFloat(els.imgConfidence.value);
-
-        try {
-            const results = [];
-            const rows = [];
-
-            for (let i = 0; i < files.length; i++) {
-                const formData = new FormData();
-                formData.append("file", files[i]);
-                formData.append("confidence", confidence);
-
-                const resp = await fetch(window.API_BASE + "/api/recognize", { method: "POST", body: formData });
-
-                if (!resp.ok) {
-                    const err = await resp.json();
-                    results.push({ error: err.detail, file_name: files[i].name });
-                    rows.push([files[i].name, "处理失败", `错误: ${err.detail}`]);
-                    showToast(`${files[i].name} 识别失败`, "error");
-                    continue;
-                }
-
-                const data = await resp.json();
-                results.push(data.result);
-                rows.push(data.table_row);
-
-                showProgress(i + 1, files.length);
-                updateResultTable(rows, results);
-                showJsonResult(results);
-                updateStats(rows, results);
-
-                if (data.result.raw_ocr_results) {
-                    showRawTable(data.result.raw_ocr_results);
-                }
-            }
-
-            showToast(`成功识别 ${results.length} 个文件`, "success");
-            setStatus("done");
-            setTimeout(() => { hideProgress(); setStatus(""); }, 3000);
-        } catch (e) {
-            showToast("请求失败: " + e.message, "error");
-            setStatus("error");
-        } finally {
-            setButtonsLoading(false);
-        }
-    });
-
-    // ========== 识别：PDF (复用同一按钮) ==========
-    // 注意：当前 UI 中只有一个"开始识别"按钮，根据当前激活的 Tab 决定处理哪种文件
-    // 如果 PDF 需要独立按钮，可以在 PDF tab 中加一个。这里通过监听 Tab 状态来处理
-
-    // 重写按钮逻辑：根据当前 Tab 判断
-    els.btnImgRecognize.addEventListener("click", async (e) => {
-        // 通过事件委托已经在上面处理，这里添加 PDF 逻辑
-        // 实际上上面的 listener 已经绑定了，我们改用更灵活的方式
-    });
-
-    // ========== 统一识别按钮 ==========
-    // 移除上面的重复绑定，重新统一处理
-    // 实际上上面的代码已经工作，我们只需要让 PDF Tab 也有触发方式
-
-    // 添加 PDF 识别：当 PDF Tab 激活时，点击同一个按钮触发 PDF 批量识别
-    // 我们修改按钮的 id 为通用的 btn-recognize，在 HTML 中已设为 btn-image-recognize
-
-    // 由于上面已经绑定了 click，我们通过检查 Tab 状态来路由
-    // 更好的方式：重新组织代码
-
-    // ========== 导出 Excel ==========
-    els.btnExport.addEventListener("click", async () => {
-        if (tableData.length === 0) {
-            showToast("无数据可导出", "warning");
-            return;
-        }
-
-        try {
-            const resp = await fetch(window.API_BASE + "/api/export", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(tableData),
-            });
-
-            if (!resp.ok) {
-                const err = await resp.json();
-                showToast("导出失败: " + err.detail, "error");
-                return;
-            }
-
-            const blob = await resp.blob();
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "invoice_results.xlsx";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showToast("导出成功", "success");
-        } catch (e) {
-            showToast("导出失败: " + e.message, "error");
-        }
-    });
-
-    // ========== 重新组织：统一识别入口 ==========
-    // 由于上面的事件绑定已经存在，我们需要更简洁的方式
-    // 清除上面的冗余，用单一入口
-
-    // 重写：清除之前的绑定并重新设置
+    // ========== 统一识别入口 ==========
     const oldBtn = els.btnImgRecognize;
     const newBtn = oldBtn.cloneNode(true);
     oldBtn.parentNode.replaceChild(newBtn, oldBtn);
 
     newBtn.addEventListener("click", async () => {
         const activeTab = document.querySelector(".seg-btn.active").dataset.tab;
-
         if (activeTab === "pdf") {
             await processPdfBatch();
         } else {
             await processImageBatch();
         }
     });
+
+    // ========== 导出 Excel ==========
 
     async function processImageBatch() {
         const files = uploadedFiles.image;

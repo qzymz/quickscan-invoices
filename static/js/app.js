@@ -179,21 +179,34 @@
         uploadedFiles[type].forEach((file, i) => {
             const item = document.createElement("div");
             item.className = "file-item";
-            item.innerHTML = `
-                <svg class="file-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    ${type === "pdf"
-                        ? '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>'
-                        : '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>'}
-                </svg>
-                <span class="file-item-name">${file.name}</span>
-                <button class="file-item-remove" data-type="${type}" data-index="${i}">×</button>
-            `;
-            listEl.appendChild(item);
-        });
-        listEl.querySelectorAll(".file-item-remove").forEach((btn) => {
-            btn.addEventListener("click", () => {
-                removeFile(btn.dataset.type, parseInt(btn.dataset.index));
+
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("class", "file-item-icon");
+            svg.setAttribute("viewBox", "0 0 24 24");
+            svg.setAttribute("fill", "none");
+            svg.setAttribute("stroke", "currentColor");
+            svg.setAttribute("stroke-width", "1.5");
+            svg.innerHTML = type === "pdf"
+                ? '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>'
+                : '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>';
+            item.appendChild(svg);
+
+            const nameSpan = document.createElement("span");
+            nameSpan.className = "file-item-name";
+            nameSpan.textContent = file.name;
+            item.appendChild(nameSpan);
+
+            const removeBtn = document.createElement("button");
+            removeBtn.className = "file-item-remove";
+            removeBtn.dataset.type = type;
+            removeBtn.dataset.index = String(i);
+            removeBtn.textContent = "×";
+            removeBtn.addEventListener("click", () => {
+                removeFile(type, i);
             });
+            item.appendChild(removeBtn);
+
+            listEl.appendChild(item);
         });
     }
 

@@ -69,12 +69,12 @@
                 <div class="panel-body">
                     <!-- Tab 切换 -->
                     <div class="segmented-control">
-                        <button class="seg-btn active" data-tab="image">图片发票</button>
-                        <button class="seg-btn" data-tab="pdf">PDF发票</button>
+                        <button class="seg-btn" data-tab="image">图片发票</button>
+                        <button class="seg-btn active" data-tab="pdf">PDF发票</button>
                     </div>
 
                     <!-- 图片上传 -->
-                    <div class="tab-content active" id="tab-image">
+                    <div class="tab-content" id="tab-image">
                         <div class="drop-zone" id="image-drop">
                             <input type="file" id="image-files" accept="image/*" class="drop-input">
                             <div class="drop-visual">
@@ -94,7 +94,7 @@
                     </div>
 
                     <!-- PDF上传 -->
-                    <div class="tab-content" id="tab-pdf">
+                    <div class="tab-content active" id="tab-pdf">
                         <div class="drop-zone" id="pdf-drop">
                             <input type="file" id="pdf-files" accept=".pdf" multiple class="drop-input">
                             <div class="drop-visual">

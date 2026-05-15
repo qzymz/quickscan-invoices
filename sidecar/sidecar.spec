@@ -91,47 +91,14 @@ a = Analysis(
         'starlette.types',
         'starlette.formparsers',
         'starlette.datastructures',
-        # Asyncio
-        'asyncio',
-        'concurrent.futures',
-        # JSON
-        'json',
-        # Threading
-        'threading',
-        # Socket
-        'socket',
-        # Signal
-        'signal',
-        # OS
-        'os',
-        'os.path',
-        'tempfile',
-        'pathlib',
-        # Typing
-        'typing',
-        'collections',
-        'collections.abc',
-        # Math
-        'math',
-        # Re
-        're',
-        # Datetime
-        'datetime',
-        # Time
-        'time',
-        # Sys
-        'sys',
-        # IO
-        'io',
-        # Logging
-        'logging',
-        'logging.config',
-        'logging.handlers',
+        # Asyncio / concurrency
+        'uvicorn.loops.asyncio',
+        # Pillow
     ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['torch', 'torchvision', 'matplotlib', 'pytest', 'test', 'tests', 'IPython', 'notebook', 'scrapy', 'jupyterlab', 'nbformat', 'ipykernel'],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=None,

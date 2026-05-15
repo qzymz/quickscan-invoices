@@ -69,48 +69,28 @@
                 <div class="panel-body">
                     <!-- Tab 切换 -->
                     <div class="segmented-control">
-                        <button class="seg-btn" data-tab="image">图片发票</button>
-                        <button class="seg-btn active" data-tab="pdf">PDF发票</button>
+                        <button class="seg-btn active">统一上传</button>
                     </div>
 
-                    <!-- 图片上传 -->
-                    <div class="tab-content" id="tab-image">
-                        <div class="drop-zone" id="image-drop">
-                            <input type="file" id="image-files" accept="image/*" class="drop-input">
-                            <div class="drop-visual">
-                                <div class="drop-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                        <rect x="3" y="3" width="18" height="18" rx="2"/>
-                                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                                        <path d="M21 15l-5-5L5 21"/>
-                                    </svg>
-                                </div>
-                                <p class="drop-text">拖拽图片到此处，或点击选择</p>
-                                <p class="drop-hint">支持 JPG / PNG / BMP / TIFF</p>
-                            </div>
-                        </div>
-                        <!-- 文件列表预览 -->
-                        <div class="file-list" id="image-file-list"></div>
-                    </div>
-
-                    <!-- PDF上传 -->
+                    <!-- 统一上传区域 -->
                     <div class="tab-content active" id="tab-pdf">
                         <div class="drop-zone" id="pdf-drop">
-                            <input type="file" id="pdf-files" accept=".pdf" multiple class="drop-input">
+                            <input type="file" id="files-input" accept=".pdf,.jpg,.jpeg,.png,.bmp,.tiff,.tif,.gif,.webp" multiple class="drop-input">
                             <div class="drop-visual">
                                 <div class="drop-icon">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                                        <polyline points="14,2 14,8 20,8"/>
-                                        <line x1="16" y1="13" x2="8" y2="13"/>
-                                        <line x1="16" y1="17" x2="8" y2="17"/>
+                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                        <polyline points="17,8 12,3 7,8"/>
+                                        <line x1="12" y1="3" x2="12" y2="15"/>
                                     </svg>
                                 </div>
-                                <p class="drop-text">拖拽PDF到此处，或点击选择</p>
-                                <p class="drop-hint">支持多文件批量上传</p>
+                                <p class="drop-text">拖拽文件到此处，或点击选择</p>
+                                <p class="drop-hint">支持 PDF / JPG / PNG / BMP / TIFF</p>
                             </div>
                         </div>
-                        <div class="file-list" id="pdf-file-list"></div>
+                        <div class="file-list" id="file-list">
+                            <div class="empty-hint">拖拽文件或点击上传</div>
+                        </div>
                     </div>
 
                     <!-- 参数控制 -->
@@ -118,22 +98,15 @@
                         <div class="control-row">
                             <label class="control-label">置信度阈值</label>
                             <div class="slider-group">
-                                <input type="range" id="image-confidence" min="0.1" max="1.0" step="0.1" value="0.5">
-                                <span class="slider-value" id="image-confidence-value">0.5</span>
-                            </div>
-                        </div>
-                        <div class="control-row">
-                            <label class="control-label">置信度阈值</label>
-                            <div class="slider-group">
-                                <input type="range" id="pdf-confidence" min="0.1" max="1.0" step="0.1" value="0.5">
-                                <span class="slider-value" id="pdf-confidence-value">0.5</span>
+                                <input type="range" id="confidence" min="0.1" max="1.0" step="0.1" value="0.6">
+                                <span class="slider-value" id="confidence-value">0.6</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- 操作按钮 -->
                     <div class="action-section">
-                        <button class="btn-accent" id="btn-image-recognize">
+                        <button class="btn-accent" id="btn-recognize">
                             <span class="btn-icon">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="11" cy="11" r="8"/>
@@ -236,6 +209,9 @@
 </pre>
                         </div>
                         <div class="detail-panel" id="detail-raw">
+                            <select id="raw-file-select" class="raw-file-select">
+                                <option value="all">全部文件</option>
+                            </select>
                             <table class="raw-table" id="raw-table">
                                 <thead>
                                     <tr>

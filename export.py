@@ -18,16 +18,16 @@ def export_table_data(table_data):
     else:
         return None
 
-    # 计算金额总计
-    try:
-        df['价税合计小写'] = pd.to_numeric(df['价税合计小写'], errors='coerce')
-        total_amount = df['价税合计小写'].sum()
-        total_row = pd.DataFrame([{'文件名': '总计', '开票日期': '', '价税合计小写': total_amount}])
+    # 计算金额总计（NaN 值不计入总和，保留原文本显示）
+    if "价税合计小写" in df.columns:
+        numeric = pd.to_numeric(df["价税合计小写"], errors="coerce")
+        total_amount = numeric.sum()
+        # Replace numeric column back with original text, add total row
+        df = df.copy()
+        total_row = pd.DataFrame([{"文件名": "总计", "开票日期": "", "价税合计小写": f"¥{total_amount:,.2f}"}])
         df = pd.concat([df, total_row], ignore_index=True)
-    except Exception as e:
-        print(f"计算金额总计失败: {e}")
 
-    with tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False) as tmp_file:
-        with pd.ExcelWriter(tmp_file.name, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name='发票识别结果')
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp_file:
+        with pd.ExcelWriter(tmp_file.name, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="发票识别结果")
         return tmp_file.name

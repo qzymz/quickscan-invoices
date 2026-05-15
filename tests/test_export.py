@@ -57,6 +57,6 @@ class TestExportTableData:
         result = export_table_data(table_data)
         df = pd.read_excel(result, sheet_name='发票识别结果')
         total_row = df[df['文件名'] == '总计']
-        assert total_row.iloc[0]['价税合计小写'] == 150.0
+        assert "150.00" in str(total_row.iloc[0]['价税合计小写'])
         # 清理
         os.unlink(result)

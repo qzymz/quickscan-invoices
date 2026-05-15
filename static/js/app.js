@@ -33,22 +33,28 @@
 
     // ========== 状态 ==========
     let tableData = [];
-    let uploadedFiles = { image: [], pdf: [] };
+    let uploadedFiles = [];  // Unified file list
+    const PDF_EXTS = new Set([".pdf"]);
+    const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".gif", ".webp"]);
+
+    function detectFileType(filename) {
+        const ext = "." + filename.split(".").pop().toLowerCase();
+        if (PDF_EXTS.has(ext)) return "pdf";
+        if (IMAGE_EXTS.has(ext)) return "image";
+        return "unknown";
+    }
 
     // ========== DOM 元素 ==========
     const els = {
-        pdfFiles: document.getElementById("pdf-files"),
-        pdfConfidence: document.getElementById("pdf-confidence"),
-        pdfConfValue: document.getElementById("pdf-confidence-value"),
-        btnPdfRecognize: null, // PDF tab uses same button as image
-        imgFiles: document.getElementById("image-files"),
-        imgConfidence: document.getElementById("image-confidence"),
-        imgConfValue: document.getElementById("image-confidence-value"),
-        btnImgRecognize: document.getElementById("btn-image-recognize"),
+        filesInput: document.getElementById("files-input"),
+        confidence: document.getElementById("confidence"),
+        confValue: document.getElementById("confidence-value"),
+        btnRecognize: document.getElementById("btn-recognize"),
         resultTbody: document.getElementById("result-tbody"),
         btnExport: document.getElementById("btn-export"),
         jsonOutput: document.getElementById("json-output"),
         rawTbody: document.getElementById("raw-tbody"),
+        rawFileSelect: document.getElementById("raw-file-select"),
         progressSection: document.getElementById("progress-section"),
         progressFill: document.getElementById("progress-fill"),
         progressPct: document.getElementById("progress-pct"),
@@ -57,10 +63,8 @@
         statCount: document.getElementById("stat-count"),
         statTotal: document.getElementById("stat-total"),
         statRate: document.getElementById("stat-rate"),
-        imageFileList: document.getElementById("image-file-list"),
-        pdfFileList: document.getElementById("pdf-file-list"),
-        imageDrop: document.getElementById("image-drop"),
-        pdfDrop: document.getElementById("pdf-drop"),
+        fileList: document.getElementById("file-list"),
+        dropZone: document.getElementById("drop-zone"),
         toastContainer: document.getElementById("toast-container"),
         bottomTime: document.getElementById("bottom-time"),
     };
@@ -68,7 +72,7 @@
     // ========== 时钟 ==========
     function updateTime() {
         const now = new Date();
-        els.bottomTime.textContent = now.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        els.bottomTime.textContent = now.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", second: "second" });
     }
     updateTime();
     setInterval(updateTime, 1000);
@@ -95,7 +99,6 @@
         }
     }
 
-    // Check API connection on load (only in Tauri)
     setTimeout(async () => {
         if (window.API_BASE && window.API_BASE.includes('localhost')) {
             const connected = await checkApiConnection();
@@ -111,35 +114,13 @@
         }
     }, 3000);
 
-    // ========== Tab 切换 ==========
-    document.querySelectorAll(".seg-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll(".seg-btn").forEach((b) => b.classList.remove("active"));
-            document.querySelectorAll(".panel .tab-content").forEach((c) => c.classList.remove("active"));
-            btn.classList.add("active");
-            document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
-        });
-    });
-
-    document.querySelectorAll(".detail-tab").forEach((btn) => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll(".detail-tab").forEach((b) => b.classList.remove("active"));
-            document.querySelectorAll(".detail-panel").forEach((c) => c.classList.remove("active"));
-            btn.classList.add("active");
-            document.getElementById("detail-" + btn.dataset.detail).classList.add("active");
-        });
-    });
-
     // ========== 置信度滑块 ==========
-    els.imgConfidence.addEventListener("input", () => {
-        els.imgConfValue.textContent = els.imgConfidence.value;
-    });
-    els.pdfConfidence.addEventListener("input", () => {
-        els.pdfConfValue.textContent = els.pdfConfidence.value;
+    els.confidence.addEventListener("input", () => {
+        els.confValue.textContent = els.confidence.value;
     });
 
     // ========== 拖拽上传 ==========
-    function setupDrop(dropZone, inputEl, type) {
+    function setupDrop(dropZone, inputEl) {
         ["dragenter", "dragover"].forEach((evt) => {
             dropZone.addEventListener(evt, (e) => {
                 e.preventDefault();
@@ -153,30 +134,39 @@
             });
         });
         dropZone.addEventListener("drop", (e) => {
+            e.preventDefault();
             const files = Array.from(e.dataTransfer.files);
-            addFiles(type, files);
+            addFiles(files);
         });
         inputEl.addEventListener("change", () => {
-            addFiles(type, Array.from(inputEl.files));
+            addFiles(Array.from(inputEl.files));
+            inputEl.value = "";
         });
     }
 
-    function addFiles(type, files) {
-        uploadedFiles[type] = [...uploadedFiles[type], ...files];
-        renderFileList(type);
+    function addFiles(files) {
+        const valid = files.filter(f => detectFileType(f.name) !== "unknown");
+        const invalid = files.length - valid.length;
+        uploadedFiles = [...uploadedFiles, ...valid];
+        renderFileList();
+        updateFileCount();
+        if (invalid > 0) showToast(`${invalid} 个文件格式不支持`, "warning");
+    }
+
+    function removeFile(index) {
+        uploadedFiles.splice(index, 1);
+        renderFileList();
         updateFileCount();
     }
 
-    function removeFile(type, index) {
-        uploadedFiles[type].splice(index, 1);
-        renderFileList(type);
-        updateFileCount();
-    }
-
-    function renderFileList(type) {
-        const listEl = type === "image" ? els.imageFileList : els.pdfFileList;
-        listEl.innerHTML = "";
-        uploadedFiles[type].forEach((file, i) => {
+    function renderFileList() {
+        els.fileList.innerHTML = "";
+        if (uploadedFiles.length === 0) {
+            els.fileList.innerHTML = '<div class="empty-hint">拖拽文件或点击上传</div>';
+            return;
+        }
+        uploadedFiles.forEach((file, i) => {
+            const type = detectFileType(file.name);
             const item = document.createElement("div");
             item.className = "file-item";
 
@@ -198,31 +188,22 @@
 
             const removeBtn = document.createElement("button");
             removeBtn.className = "file-item-remove";
-            removeBtn.dataset.type = type;
-            removeBtn.dataset.index = String(i);
             removeBtn.textContent = "×";
             removeBtn.addEventListener("click", () => {
-                removeFile(type, i);
+                removeFile(i);
             });
             item.appendChild(removeBtn);
 
-            listEl.appendChild(item);
+            els.fileList.appendChild(item);
         });
     }
 
     function updateFileCount() {
-        const activeTab = document.querySelector(".seg-btn.active").dataset.tab;
-        const files = uploadedFiles[activeTab];
-        els.fileCount.textContent = `${files.length} 个文件`;
+        els.fileCount.textContent = `${uploadedFiles.length} 个文件`;
     }
 
-    // 监听 tab 切换更新计数
-    document.querySelectorAll(".seg-btn").forEach((btn) => {
-        btn.addEventListener("click", updateFileCount);
-    });
-
-    setupDrop(els.imageDrop, els.imgFiles, "image");
-    setupDrop(els.pdfDrop, els.pdfFiles, "pdf");
+    setupDrop(els.dropZone, els.filesInput);
+    renderFileList();
 
     // ========== 状态更新 ==========
     function setStatus(status) {
@@ -266,10 +247,10 @@
 
     // ========== 结果表格 ==========
     function updateResultTable(rows, results) {
-        tableData = rows;
+        tableData = [...tableData, ...rows];  // Accumulate
         els.resultTbody.innerHTML = "";
 
-        if (rows.length === 0) {
+        if (tableData.length === 0) {
             els.resultTbody.innerHTML = `<tr class="empty-row">
                 <td colspan="3"><div class="empty-state">
                     <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div>
@@ -279,7 +260,7 @@
             return;
         }
 
-        rows.forEach((row) => {
+        tableData.forEach((row) => {
             const tr = document.createElement("tr");
             row.forEach((cell) => {
                 const td = document.createElement("td");
@@ -292,8 +273,42 @@
     }
 
     // ========== JSON / Raw ==========
+    let lastResults = [];
+
     function showJsonResult(results) {
+        lastResults = results;
         els.jsonOutput.textContent = JSON.stringify(results, null, 2);
+        updateRawFileSelect(results);
+    }
+
+    function updateRawFileSelect(results) {
+        if (!els.rawFileSelect) return;
+        els.rawFileSelect.innerHTML = '<option value="all">全部文件</option>';
+        results.forEach((r, i) => {
+            const opt = document.createElement("option");
+            opt.value = String(i);
+            opt.textContent = r.file_name || `文件 ${i + 1}`;
+            els.rawFileSelect.appendChild(opt);
+        });
+        if (els.rawFileSelect) els.rawFileSelect.onchange = () => showRawForSelection(results);
+    }
+
+    function showRawForSelection(results) {
+        const val = els.rawFileSelect ? els.rawFileSelect.value : "all";
+        if (val === "all") {
+            const all = [];
+            results.forEach(r => {
+                if (r.raw_ocr_results) {
+                    all.push(...r.raw_ocr_results.map(t => ({ ...t, _file: r.file_name })));
+                }
+            });
+            showRawTable(all);
+        } else {
+            const idx = parseInt(val);
+            if (results[idx] && results[idx].raw_ocr_results) {
+                showRawTable(results[idx].raw_ocr_results);
+            }
+        }
     }
 
     function showRawTable(rawOcrResults) {
@@ -303,12 +318,18 @@
         }
         rawOcrResults.forEach((item, i) => {
             const tr = document.createElement("tr");
+            if (item._file) {
+                const tdFile = document.createElement("td");
+                tdFile.textContent = item._file;
+                tr.appendChild(tdFile);
+            }
             const tdIdx = document.createElement("td");
             tdIdx.textContent = i + 1;
             const tdText = document.createElement("td");
             tdText.textContent = item.text || "";
             const tdScore = document.createElement("td");
             tdScore.textContent = ((item.score || 0) * 100).toFixed(0) + "%";
+            if (item._file) tr.appendChild(tdFile || tdIdx);
             tr.appendChild(tdIdx);
             tr.appendChild(tdText);
             tr.appendChild(tdScore);
@@ -336,36 +357,27 @@
     }
 
     // ========== 统一识别入口 ==========
-    const oldBtn = els.btnImgRecognize;
+    const oldBtn = els.btnRecognize;
     const newBtn = oldBtn.cloneNode(true);
     oldBtn.parentNode.replaceChild(newBtn, oldBtn);
 
     newBtn.addEventListener("click", async () => {
-        const activeTab = document.querySelector(".seg-btn.active").dataset.tab;
-        if (activeTab === "pdf") {
-            await processBatch("pdf");
-        } else {
-            await processBatch("image");
-        }
-    });
-
-    async function processBatch(fileType) {
-        const files = fileType === "pdf" ? uploadedFiles.pdf : uploadedFiles.image;
-        if (files.length === 0) {
-            showToast(fileType === "pdf" ? "请先选择或拖拽PDF文件" : "请先选择或拖拽图片文件", "warning");
+        if (uploadedFiles.length === 0) {
+            showToast("请先选择或拖拽文件", "warning");
             return;
         }
+        await processBatch();
+    });
 
+    async function processBatch() {
         setButtonsLoading(true);
         setStatus("processing");
         hideProgress();
-        const confidence = fileType === "pdf"
-            ? parseFloat(els.pdfConfidence.value)
-            : parseFloat(els.imgConfidence.value);
+        const confidence = parseFloat(els.confidence.value);
 
         try {
             const formData = new FormData();
-            for (const file of files) {
+            for (const file of uploadedFiles) {
                 formData.append("files", file);
             }
             formData.append("confidence", confidence);
@@ -394,9 +406,6 @@
                         updateResultTable(status.table_data, status.results);
                         showJsonResult(status.results);
                         updateStats(status.table_data, status.results);
-                        if (status.results.length > 0 && status.results[0].raw_ocr_results) {
-                            showRawTable(status.results[0].raw_ocr_results);
-                        }
                     }
 
                     if (status.status === "done" || status.status === "error") {

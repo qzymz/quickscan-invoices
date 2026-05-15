@@ -3,40 +3,40 @@
    ============================================ */
 
 :root {
-    /* 核心色系 — 深夜蓝 + 暖金 */
-    --bg-deep: #080b12;
-    --bg-primary: #0c1017;
-    --bg-elevated: #121720;
-    --bg-surface: #181e28;
-    --bg-hover: #1e2532;
-    --bg-active: #252d3a;
+    /* 核心色系 — 亮色主题（默认） */
+    --bg-deep: #f5f7fa;
+    --bg-primary: #ffffff;
+    --bg-elevated: #f8f9fb;
+    --bg-surface: #f0f2f5;
+    --bg-hover: #e8eaee;
+    --bg-active: #dde0e6;
 
     /* 金色主调 */
-    --gold-primary: #c9a96e;
-    --gold-light: #ddc08f;
-    --gold-dim: #a0844d;
-    --gold-glow: rgba(201, 169, 110, 0.12);
-    --gold-glow-strong: rgba(201, 169, 110, 0.25);
+    --gold-primary: #b8943e;
+    --gold-light: #9a7a2e;
+    --gold-dim: #8a6e24;
+    --gold-glow: rgba(184, 148, 62, 0.08);
+    --gold-glow-strong: rgba(184, 148, 62, 0.15);
 
     /* 文字层级 */
-    --text-primary: #e8e2d8;
-    --text-secondary: #9a958c;
-    --text-tertiary: #5c5850;
+    --text-primary: #1a1a2e;
+    --text-secondary: #5a5a6e;
+    --text-tertiary: #9a9aae;
 
     /* 状态色 */
-    --success: #4ade80;
-    --error: #f87171;
-    --warning: #fbbf24;
+    --success: #16a34a;
+    --error: #dc2626;
+    --warning: #d97706;
 
     /* 边框 */
-    --border-subtle: rgba(201, 169, 110, 0.08);
-    --border-default: rgba(201, 169, 110, 0.15);
-    --border-strong: rgba(201, 169, 110, 0.3);
+    --border-subtle: rgba(0, 0, 0, 0.06);
+    --border-default: rgba(0, 0, 0, 0.12);
+    --border-strong: rgba(0, 0, 0, 0.2);
 
     /* 阴影 */
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
-    --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
-    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
 
     /* 间距 */
     --space-xs: 4px;
@@ -60,6 +60,38 @@
     --transition-fast: 150ms ease;
     --transition-normal: 250ms ease;
     --transition-slow: 400ms ease;
+}
+
+/* 暗色主题 */
+[data-theme="dark"] {
+    --bg-deep: #080b12;
+    --bg-primary: #0c1017;
+    --bg-elevated: #121720;
+    --bg-surface: #181e28;
+    --bg-hover: #1e2532;
+    --bg-active: #252d3a;
+
+    --gold-primary: #c9a96e;
+    --gold-light: #ddc08f;
+    --gold-dim: #a0844d;
+    --gold-glow: rgba(201, 169, 110, 0.12);
+    --gold-glow-strong: rgba(201, 169, 110, 0.25);
+
+    --text-primary: #e8e2d8;
+    --text-secondary: #9a958c;
+    --text-tertiary: #5c5850;
+
+    --success: #4ade80;
+    --error: #f87171;
+    --warning: #fbbf24;
+
+    --border-subtle: rgba(201, 169, 110, 0.08);
+    --border-default: rgba(201, 169, 110, 0.15);
+    --border-strong: rgba(201, 169, 110, 0.3);
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
 }
 
 /* 重置 */
@@ -1000,4 +1032,30 @@ body {
 .status-indicator.done .status-dot {
     background: var(--success);
     box-shadow: 0 0 6px var(--success);
+}
+
+/* Theme toggle button */
+.theme-toggle {
+    background: none;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    padding: 6px 10px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+}
+
+.theme-toggle:hover {
+    background: var(--bg-hover);
+    color: var(--gold-primary);
+    border-color: var(--border-default);
+}
+
+.theme-toggle svg {
+    width: 16px;
+    height: 16px;
 }

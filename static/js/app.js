@@ -3,6 +3,36 @@
 (function () {
     "use strict";
 
+    // ========== 主题切换 ==========
+    function initTheme() {
+        const saved = localStorage.getItem("qs-theme") || "light";
+        document.documentElement.dataset.theme = saved;
+        updateThemeIcon(saved);
+    }
+
+    function updateThemeIcon(theme) {
+        const lightIcon = document.querySelector(".theme-icon-light");
+        const darkIcon = document.querySelector(".theme-icon-dark");
+        if (lightIcon && darkIcon) {
+            lightIcon.style.display = theme === "light" ? "none" : "block";
+            darkIcon.style.display = theme === "light" ? "block" : "none";
+        }
+    }
+
+    function toggleTheme() {
+        const current = document.documentElement.dataset.theme || "light";
+        const next = current === "light" ? "dark" : "light";
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem("qs-theme", next);
+        updateThemeIcon(next);
+    }
+
+    initTheme();
+    document.addEventListener("DOMContentLoaded", function () {
+        const toggle = document.getElementById("theme-toggle");
+        if (toggle) toggle.addEventListener("click", toggleTheme);
+    });
+
     // ========== 状态 ==========
     let tableData = [];
     let uploadedFiles = { image: [], pdf: [] };

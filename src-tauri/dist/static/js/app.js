@@ -28,10 +28,8 @@
     }
 
     initTheme();
-    document.addEventListener("DOMContentLoaded", function () {
-        const toggle = document.getElementById("theme-toggle");
-        if (toggle) toggle.addEventListener("click", toggleTheme);
-    });
+    const themeToggle = document.getElementById("theme-toggle");
+    if (themeToggle) themeToggle.addEventListener("click", toggleTheme);
 
     // ========== 状态 ==========
     let tableData = [];

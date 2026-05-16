@@ -401,6 +401,10 @@ body {
     color: var(--gold-primary);
 }
 
+.drop-visual {
+    pointer-events: none;
+}
+
 .drop-icon svg {
     width: 100%;
     height: 100%;

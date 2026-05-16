@@ -13,15 +13,15 @@
 
     /* 金色主调 */
     --gold-primary: #b8943e;
-    --gold-light: #9a7a2e;
+    --gold-light: #8a6e24;
     --gold-dim: #8a6e24;
     --gold-glow: rgba(184, 148, 62, 0.08);
     --gold-glow-strong: rgba(184, 148, 62, 0.15);
 
     /* 文字层级 */
     --text-primary: #1a1a2e;
-    --text-secondary: #5a5a6e;
-    --text-tertiary: #9a9aae;
+    --text-secondary: #4a4a5e;
+    --text-tertiary: #7a7a8e;
 
     /* 状态色 */
     --success: #16a34a;
@@ -123,9 +123,13 @@ body {
         linear-gradient(var(--border-subtle) 1px, transparent 1px),
         linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
     background-size: 60px 60px;
-    opacity: 0.4;
+    opacity: 0.15;
     pointer-events: none;
     z-index: 0;
+}
+
+[data-theme="dark"] .bg-grid {
+    opacity: 0.4;
 }
 
 .bg-glow {
@@ -239,7 +243,7 @@ body {
 /* 主工作区 */
 .main-workspace {
     display: grid;
-    grid-template-columns: 380px 1fr;
+    grid-template-columns: minmax(400px, 420px) 1fr;
     gap: 1px;
     flex: 1;
     overflow: hidden;
@@ -767,6 +771,11 @@ body {
     color: var(--text-primary);
 }
 
+.data-table tbody td {
+    user-select: text;
+    cursor: text;
+}
+
 /* 空状态 */
 .empty-state {
     display: flex;
@@ -851,8 +860,8 @@ body {
     display: none;
     padding: var(--space-md);
     overflow-y: auto;
-    max-height: 220px;
     flex: 1;
+    min-height: 120px;
 }
 
 .detail-panel.active {
@@ -869,7 +878,6 @@ body {
     border-radius: var(--radius-md);
     border: 1px solid var(--border-subtle);
     overflow: auto;
-    max-height: 200px;
 }
 
 /* 原始表格 */
@@ -993,6 +1001,9 @@ body {
     }
     .stats-row {
         grid-template-columns: repeat(3, 1fr);
+    }
+    .drop-zone {
+        padding: var(--space-lg) var(--space-md);
     }
 }
 

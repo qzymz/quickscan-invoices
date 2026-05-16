@@ -1002,6 +1002,9 @@ body {
     .stats-row {
         grid-template-columns: repeat(3, 1fr);
     }
+    .drop-zone {
+        padding: var(--space-lg) var(--space-md);
+    }
 }
 
 @media (max-width: 600px) {
